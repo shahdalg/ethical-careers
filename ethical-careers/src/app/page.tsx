@@ -4,7 +4,6 @@ export default function Home() {
       <a 
         href = "/login"
         className="fixed top-6 right-6 bg-green-700 text-white px-6 py-3 rounded-lg hover:bg-green-300 transition"
-
       >
         Login
       </a>
