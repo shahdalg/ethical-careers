@@ -1,4 +1,5 @@
 "use client"; // 👈 must be the very first line
+import { auth } from "../../lib/firebase"; // import from central file
 
 import { useState } from "react";
 
@@ -42,10 +43,12 @@ export default function LoginPage() {
         </label>
 
         <button
-          type="submit"
-          className="bg-blue-500 hover:bg-blue-600 text-white font-semibold py-2 rounded"
+          className="text-white font-semibold py-2 px-4 rounded transition-colors"
+          style={{ backgroundColor: "#3D348B" }}
+          onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = "#2E256E")} // darker on hover
+          onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = "#5E4BB8")} // back to original
         >
-          Log In
+          Submit
         </button>
       </form>
     </main>
