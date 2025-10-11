@@ -1,3 +1,4 @@
+"use client";
 export default function ContactPage() {
   return (
     <main>
