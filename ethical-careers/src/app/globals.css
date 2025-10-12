@@ -24,3 +24,9 @@ body {
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
 }
+
+@layer utilities {
+  .animate-slow-spin {
+    animation: spin 8s linear infinite;
+  }
+}

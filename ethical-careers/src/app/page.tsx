@@ -1,6 +1,7 @@
 "use client";
 import { useEffect, useRef } from "react";
 
+
 // Drop-in replacement for your Home component
 // Changes:
 // - Replaced orange accents with yellow (#F7B801)
@@ -89,7 +90,7 @@ export default function Home() {
           <img
             src="/images/Compass.png"
             alt="Compass graphic"
-            className="pointer-events-none select-none absolute -bottom-0 left-10 w-28 md:w-90 opacity-100 rotate-6"
+            className="pointer-events-none select-none absolute -bottom-0 left-10 w-28 md:w-90 opacity-100 rotate-6 animate-slow-spin"
             aria-hidden="true"
           />
 
