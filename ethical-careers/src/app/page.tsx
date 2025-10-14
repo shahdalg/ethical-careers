@@ -2,15 +2,6 @@
 import { useEffect, useRef } from "react";
 
 
-// Drop-in replacement for your Home component
-// Changes:
-// - Replaced orange accents with yellow (#F7B801)
-// - Added yellow-tinted hero background
-// - Added scroll-reveal animations (IntersectionObserver)
-// - Switched font to Plus Jakarta Sans (configure in tailwind.config + globals.css)
-// - Added three ranking categories (People, Planet, Principles)
-// - Added a "How it works" section (Create account → Find company → Fill survey → See scores)
-
 export default function Home() {
   const revealRefs = useRef<Array<HTMLElement | null>>([]);
   revealRefs.current = [];
@@ -67,11 +58,11 @@ export default function Home() {
         <div className="relative flex flex-col items-center justify-center text-center py-24 px-6">
           <h2 className="text-4xl md:text-5xl font-extrabold text-[#3D348B] mb-6 transition-all hover:scale-[1.02]">
             Find Ethical Companies,
-            <span className="block">Build Meaningful Careers</span>
+            <span className="block">Build a Meaningful Career</span>
           </h2>
           <p className="max-w-2xl text-gray-700 mb-8">
-            Discover organizations that align with your values — sustainability, equity, and transparency.
-            Powered by community-driven reviews and data.
+            Discover companies that align with your values.
+            Powered by community-driven reviews and insight.
           </p>
           <a
             href="#companies"
@@ -122,7 +113,7 @@ export default function Home() {
         <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-10">
           {[
             { name: "Solara Energy", field: "Clean Tech", color: "#F7B801" },
-            { name: "CareLoop", field: "Healthcare", color: "#7678ED" },
+            { name: "General Motors", field: "Automotive", color: "#7678ED" },
             { name: "EcoChain", field: "Sustainability", color: "#3D348B" },
           ].map((company) => (
             <article
@@ -144,77 +135,92 @@ export default function Home() {
       </section>
 
       {/* Rankings Section: People / Planet / Principles */}
-      <section id="rankings" ref={setRevealRef} className="reveal-start px-6 py-20 max-w-6xl mx-auto">
-        <h3 className="text-3xl font-bold text-center text-[#3D348B] mb-10">Ranking Categories</h3>
-        <div className="grid md:grid-cols-3 gap-8">
-          {[
-            {
-              title: "People",
-              icon: "/images/icon-people.svg",
-              desc: "Employee well-being, pay equity, inclusion, and safety.",
-              score: 86,
-            },
-            {
-              title: "Planet",
-              icon: "/images/icon-planet.svg",
-              desc: "Emissions, materials, circularity, and supplier sustainability.",
-              score: 74,
-            },
-            {
-              title: "Transparency",
-              icon: "/images/icon-transparency.svg",
-              desc: "Disclosure, governance, privacy, and community impact.",
-              score: 91,
-            },
-          ].map((card) => (
-            <div key={card.title} className="rounded-2xl border border-gray-200 bg-white p-6 shadow-md">
-              <div className="flex items-start justify-between">
-                <div className="flex items-center gap-3">
-                  <img src={card.icon} alt="" aria-hidden="true" className="h-8 w-8" />
-                  <h4 className="text-xl font-semibold text-gray-800">{card.title}</h4>
-                </div>
-                <span className="text-sm text-gray-500">Score</span>
-              </div>
-              <p className="text-gray-600 mt-2 mb-4">{card.desc}</p>
-              <div className="w-full h-3 rounded-full bg-gray-200 overflow-hidden">
-                <div
-                  className="h-3 bg-[#44AF69] transition-all"
-                  style={{ width: `${card.score}%` }}
-                />
-              </div>
-              <div className="mt-2 text-sm text-gray-700 font-medium">{card.score}/100</div>
-            </div>
-          ))}
-        </div>
-      </section>
+<section
+  id="rankings"
+  ref={setRevealRef}
+  className="reveal-start px-6 py-20 max-w-6xl mx-auto"
+>
+  <h3 className="text-3xl font-bold text-center text-[#3D348B] mb-10">
+    Ranking Categories
+  </h3>
 
-      {/* How it works */}
-      <section id="how" ref={setRevealRef} className="reveal-start px-6 py-24 max-w-6xl mx-auto">
-        <h3 className="text-3xl font-bold text-center text-[#3D348B] mb-12">How it works</h3>
-        <ol className="grid md:grid-cols-4 gap-6">
-          {[
-            { n: "01", t: "Create an account", d: "Sign up with your email or school login." },
-            { n: "02", t: "Find a company", d: "Search and filter by role, values, and size." },
-            { n: "03", t: "Fill the survey", d: "Answer quick, structured questions anonymously." },
-            { n: "04", t: "See the scores", d: "Get People/Planet/Principles ratings instantly." },
-          ].map((s) => (
-            <li key={s.n}
-                className="rounded-xl border border-gray-200 bg-white p-6 shadow-md">
-              <div className="text-xs font-mono text-[#F7B801]">{s.n}</div>
-              <div className="mt-2 font-semibold text-gray-800">{s.t}</div>
-              <p className="text-sm text-gray-600">{s.d}</p>
-            </li>
-          ))}
-        </ol>
-      </section>
+  <div className="grid md:grid-cols-3 gap-8">
+    {[
+      {
+        title: "People",
+        icon: "/images/people-fill.svg",
+        desc: "Employee well-being, pay equity, inclusion, and safety.",
+      },
+      {
+        title: "Planet",
+        icon: "/images/globe-americas.svg",
+        desc: "Emissions, materials, circularity, and supplier sustainability.",
+      },
+      {
+        title: "Transparency",
+        icon: "/images/eyeglasses.svg",
+        desc: "Disclosure, governance, privacy, and community impact.",
+      },
+    ].map((card) => (
+      <div
+        key={card.title}
+        className="rounded-2xl border border-gray-200 bg-white p-6 shadow-md hover:shadow-lg transition-all"
+      >
+        <div className="flex items-center gap-3 mb-3">
+          <img src={card.icon} alt="" aria-hidden="true" className="h-8 w-8" />
+          <h4 className="text-xl font-semibold text-gray-800">{card.title}</h4>
+        </div>
+        <p className="text-gray-600 leading-relaxed">{card.desc}</p>
+      </div>
+    ))}
+  </div>
+</section>
+
+{/* ✨ How It Works */}
+<section
+  id="how"
+  ref={setRevealRef}
+  className="reveal-start relative overflow-hidden py-28 w-full bg-[#FAFAFA]"
+>
+  <div className="px-6 max-w-6xl mx-auto">
+    <h3 className="text-4xl font-extrabold text-center text-[#3D348B] mb-16 tracking-wide">
+      How It Works ✨
+    </h3>
+
+    <ol className="grid md:grid-cols-4 gap-8">
+      {[
+        { n: "01", t: "Create an account", d: "Sign up with your email to begin." },
+        { n: "02", t: "Find a company", d: "Explore companies that align with your field." },
+        { n: "03", t: "Fill the survey", d: "Share your thoughts anonymously." },
+        { n: "04", t: "See the scores", d: "See the ethics reviews and ratings." },
+      ].map((s) => (
+        <li
+          key={s.n}
+          className="relative rounded-2xl border border-[#F7E08A] bg-white p-8 shadow-md hover:shadow-lg transition-all hover:-translate-y-1"
+        >
+          <div className="text-5xl font-extrabold text-[#F7B801] opacity-90 mb-3 font-serif">
+            {s.n}
+          </div>
+          <div className="mt-1 text-lg font-semibold text-[#3D348B]">
+            {s.t}
+          </div>
+          <p className="text-sm text-gray-700 mt-1 leading-relaxed">{s.d}</p>
+        </li>
+      ))}
+    </ol>
+  </div>
+
+
+</section>
+
 
       {/* About / CTA */}
       <section id="about" ref={setRevealRef} className="reveal-start bg-[#3D348B]/5 py-20 text-center px-6">
         <h3 className="text-2xl font-bold text-[#3D348B] mb-4">Why Ethical Careers?</h3>
         <p className="max-w-3xl mx-auto text-gray-700 leading-relaxed">
-          Today’s professionals seek more than a paycheck — they want purpose.
+          Today’s professionals seek more than a paycheck, we want purpose.
           Our platform helps students and job‑seekers evaluate the ethical standing of companies
-          through verified reviews and transparent metrics.
+          through verified reviews.
         </p>
       </section>
 
