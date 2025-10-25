@@ -1,15 +1,36 @@
 "use client"; // 👈 must be the very first line
 import { auth } from "../../lib/firebase"; // import from central file
+import { useRouter } from "next/navigation";
 
-import { useState, type FormEvent } from "react";
+import React, { useState } from "react";
+
+import {signInWithEmailAndPassword} from "firebase/auth";
 
 export default function LoginPage() {
+  const router = useRouter();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
-  const handleSubmit = (e: FormEvent<HTMLFormElement>) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setError(null);
+    setLoading(true);
     alert(`Welcome, ${email}!`);
+    try {
+      await signInWithEmailAndPassword(auth, email, password);
+      // redirect wherever your app should go after login
+      router.push("/dashboard");
+    } catch (err: any) {
+      // map common Firebase errors to friendly messages
+      const code = err?.code as string | undefined;
+      if (code === "auth/user-not-found" || code === "auth/wrong-password" || code === "auth/invalid-email")
+        setError("Incorrect email or password.");
+      else setError("Could not sign you in. Please try again.");
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -54,3 +75,4 @@ export default function LoginPage() {
     </main>
   );
 }
+
