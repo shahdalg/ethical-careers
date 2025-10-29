@@ -10,13 +10,22 @@ import { db } from "../../lib/firebase"; // keep if this is already your client 
 import { collection, addDoc, Timestamp } from "firebase/firestore";
 
 export default function SurveyPage() {
+  //Company Name
+  const [companyText, setCompanyText] = useState("");
+
+  //Self Identify - multiple choice 
+  //I used to work here
+  //I currently work here
+  //I have never worked here - option to expand
+  const [selfIdentify, setSelfIdentify] = useState("");
+
   // People
   const [peopleText, setPeopleText] = useState("");
   const [peopleRating, setPeopleRating] = useState("");
 
-  // Principles
-  const [principlesText, setPrinciplesText] = useState("");
-  const [principlesRating, setPrinciplesRating] = useState("");
+  // Planet
+  const [planetText, setPlanetText] = useState("");
+  const [planetRating, setPlanetRating] = useState("");
 
   // Transparency
   const [transparencyText, setTransparencyText] = useState("");
@@ -34,10 +43,11 @@ export default function SurveyPage() {
     e.preventDefault();
     try {
       await addDoc(collection(db, "posts"), {
+        companyText,
         peopleText,
         peopleRating: Number(peopleRating) || null,
-        principlesText,
-        principlesRating: Number(principlesRating) || null,
+        planetText,
+        planetRating: Number(planetRating) || null,
         transparencyText,
         transparencyRating: Number(transparencyRating) || null,
         recommend,
@@ -46,8 +56,10 @@ export default function SurveyPage() {
       alert("Post submitted!");
 
       // clear all states
+      setCompanyText("");
+      setSelfIdentify("");
       setPeopleText(""); setPeopleRating("");
-      setPrinciplesText(""); setPrinciplesRating("");
+      setPlanetText(""); setPlanetRating("");
       setTransparencyText(""); setTransparencyRating("");
       setRecommend("");
     } catch (err) {
@@ -104,12 +116,88 @@ export default function SurveyPage() {
           Submit Your Review
         </h1>
 
-        <form onSubmit={handleSubmit} className="flex flex-col gap-6 w-full max-w-lg">
+        <form onSubmit={handleSubmit} className="flex flex-col gap-6 w-full max-w-lg">  
+          {/* Company Name */}
+          <section className="border border-gray-200 rounded-2xl p-5 bg-white shadow-sm">
+            <h2 className="font-semibold mb-2 text-[#3D348B]">Company Name</h2>
+            <label className="block mb-2 text-sm">
+              Enter the name of the company you are reviewing:
+              <input
+                type="text"
+                value={companyText}
+                onChange={(e) => setCompanyText(e.target.value)}
+                className="w-full border border-gray-300 p-2 rounded mt-1 focus:outline-none focus:ring-2 focus:ring-[#44AF69]"
+              />
+            </label>
+          </section>
+
+           {/* Self Identify */}
+<section className="border border-gray-200 rounded-2xl p-5 bg-white shadow-sm">
+  <h2 className="font-semibold mb-2 text-[#3D348B]">Self Identify</h2>
+  <label className="block mb-2 text-sm">
+    What is your current status at this company?
+    <select
+      value={selfIdentify}
+      onChange={(e) => setSelfIdentify(e.target.value)}
+      className="w-full border border-gray-300 p-2 rounded mt-1 focus:outline-none focus:ring-2 focus:ring-[#44AF69]"
+    >
+      <option value="">Select an option</option>
+      <option value="currentlyWork">I currently work here</option>
+      <option value="usedToWork">I used to work here</option>
+      <option value="neverWorked">I have never worked here</option>
+    </select>
+  </label>
+
+  {/* Follow-up questions — rendered conditionally */}
+  {selfIdentify === "currentlyWork" && (
+    <div className="mt-3">
+      <label className="block mb-2 text-sm">
+        When did you start working here?
+        <input
+          type="month"
+          className="w-full border border-gray-300 p-2 rounded mt-1 focus:outline-none focus:ring-2 focus:ring-[#44AF69]"
+        />
+      </label>
+    </div>
+  )}
+
+  {selfIdentify === "usedToWork" && (
+    <div className="mt-3">
+      <label className="block mb-2 text-sm">
+        When did you start?
+        <input
+          type="month"
+          className="w-full border border-gray-300 p-2 rounded mt-1 focus:outline-none focus:ring-2 focus:ring-[#44AF69]"
+        />
+      </label>
+      <label className="block mb-2 text-sm">
+        When did you leave?
+        <input
+          type="month"
+          className="w-full border border-gray-300 p-2 rounded mt-1 focus:outline-none focus:ring-2 focus:ring-[#44AF69]"
+        />
+      </label>
+    </div>
+  )}
+
+  {selfIdentify === "neverWorked" && (
+    <div className="mt-3">
+      <label className="block mb-2 text-sm">
+        Please expand on why you’re reviewing this company:
+        <textarea
+          className="w-full border border-gray-300 p-2 rounded mt-1 focus:outline-none focus:ring-2 focus:ring-[#44AF69]"
+          rows={3}
+        />
+      </label>
+    </div>
+  )}
+</section>
+          
           {/* People */}
           <section className="border border-gray-200 rounded-2xl p-5 bg-white shadow-sm">
             <h2 className="font-semibold mb-2 text-[#3D348B]">People</h2>
             <label className="block mb-2 text-sm">
-              How do you feel about the company's team and culture?
+              How do you feel about this company’s culture and ethical treatment of its employees?
               <textarea
                 value={peopleText}
                 onChange={(e) => setPeopleText(e.target.value)}
@@ -121,27 +209,27 @@ export default function SurveyPage() {
             <RatingRadios value={peopleRating} setValue={setPeopleRating} name="peopleRating" />
           </section>
 
-          {/* Principles */}
+          {/* Planet */}
           <section className="border border-gray-200 rounded-2xl p-5 bg-white shadow-sm">
-            <h2 className="font-semibold mb-2 text-[#3D348B]">Principles</h2>
+            <h2 className="font-semibold mb-2 text-[#3D348B]">Planet</h2>
             <label className="block mb-2 text-sm">
-              Does the company follow ethical business practices?
+              How do you feel about this company’s environmental sustainability and commitment to reducing its impact on the planet?
               <textarea
-                value={principlesText}
-                onChange={(e) => setPrinciplesText(e.target.value)}
+                value={planetText}
+                onChange={(e) => setPlanetText(e.target.value)}
                 className="w-full border border-gray-300 p-2 rounded mt-1 focus:outline-none focus:ring-2 focus:ring-[#44AF69]"
                 rows={3}
               />
             </label>
-            <label className="block mt-2 text-sm">Rate the company in terms of Principles:</label>
-            <RatingRadios value={principlesRating} setValue={setPrinciplesRating} name="principlesRating" />
+            <label className="block mt-2 text-sm">Rate the company in terms of Planet:</label>
+            <RatingRadios value={planetRating} setValue={setPlanetRating} name="planetRating" />
           </section>
 
           {/* Transparency */}
           <section className="border border-gray-200 rounded-2xl p-5 bg-white shadow-sm">
             <h2 className="font-semibold mb-2 text-[#3D348B]">Transparency</h2>
             <label className="block mb-2 text-sm">
-              How transparent is the company about its practices?
+              How do you feel about this company’s transparency in its business practices and alignments?
               <textarea
                 value={transparencyText}
                 onChange={(e) => setTransparencyText(e.target.value)}
