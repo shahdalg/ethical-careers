@@ -109,7 +109,7 @@ export default function SurveyPage() {
   return (
     <main className="bg-gray-50 text-gray-800 min-h-screen">
       {/* 🔝 Reused top bar, no Login button */}
-      <Navbar showLogin={false} />
+      <Navbar {...({ showLogin: false } as any)} />
 
       <div className="p-8 flex flex-col items-center">
         <h1 className="text-2xl font-bold mb-6" style={{ color: "#3D348B" }}>

@@ -1,7 +1,8 @@
 // app/components/Navbar.tsx
 import Link from "next/link";
 
-export default function Navbar({ showLogin = true }: { showLogin?: boolean }) {
+export default function Navbar() {
+  const showLogin = true;
   return (
     <header className="sticky top-0 z-50 backdrop-blur bg-white/70 border-b border-gray-200 shadow-sm">
       <div className="flex justify-between items-center px-8 py-4 max-w-6xl mx-auto">

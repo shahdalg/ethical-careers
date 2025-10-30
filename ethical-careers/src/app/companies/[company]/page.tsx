@@ -1,0 +1,218 @@
+'use client';
+
+import { useState, useEffect } from 'react';
+import { useParams, useRouter } from 'next/navigation';
+import Link from 'next/link';
+import Navbar from "@/app/components/page";
+import { db } from "@/lib/firebase";
+import { collection, query, where, getDocs, DocumentData } from "firebase/firestore";
+
+interface Review {
+  id: string;
+  selfIdentify: string;
+  peopleText: string;
+  peopleRating: number;
+  planetText: string;
+  planetRating: number;
+  transparencyText: string;
+  transparencyRating: number;
+  recommend: string;
+  references: string;
+  createdAt: any;
+}
+
+export default function CompanyPage() {
+  const router = useRouter();
+  const { company } = useParams();
+  const [reviews, setReviews] = useState<Review[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  // Calculate average ratings
+  const averageRating = (field: 'peopleRating' | 'planetRating' | 'transparencyRating') => {
+    const validRatings = reviews.filter(r => r[field]).map(r => r[field]);
+    if (!validRatings.length) return 0;
+    return validRatings.reduce((a, b) => a + b, 0) / validRatings.length;
+  };
+
+  // Calculate recommendation percentage
+  const recommendationPercentage = () => {
+    const recommendations = reviews.filter(r => r.recommend === 'Yes').length;
+    return reviews.length ? Math.round((recommendations / reviews.length) * 100) : 0;
+  };
+
+  useEffect(() => {
+    const fetchReviews = async () => {
+      if (!company) return;
+      
+      try {
+        const q = query(
+          collection(db, "posts"),
+          where("company", "==", decodeURIComponent(company.toString()))
+        );
+        
+        const querySnapshot = await getDocs(q);
+        const reviewsData = querySnapshot.docs.map(doc => ({
+          id: doc.id,
+          ...doc.data()
+        })) as Review[];
+        
+        setReviews(reviewsData);
+      } catch (err) {
+        console.error(err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchReviews();
+  }, [company]);
+
+  const RatingDisplay = ({ rating }: { rating: number }) => (
+    <div className="flex items-center gap-1">
+      {[1, 2, 3, 4, 5].map((star) => (
+        <span
+          key={star}
+          className={`text-lg ${
+            star <= rating ? 'text-yellow-500' : 'text-gray-300'
+          }`}
+        >
+          ★
+        </span>
+      ))}
+      <span className="ml-2 text-sm">({rating.toFixed(1)})</span>
+    </div>
+  );
+
+  if (loading) {
+    return (
+      <main className="bg-gray-50 text-gray-800 min-h-screen">
+        <Navbar />
+        <div className="p-8">Loading...</div>
+      </main>
+    );
+  }
+
+  return (
+    <main className="bg-gray-50 text-gray-800 min-h-screen">
+      <Navbar />
+
+      <div className="p-8 max-w-6xl mx-auto">
+        <div className="flex justify-between items-center mb-8">
+          <h1 className="text-3xl font-bold" style={{ color: "#3D348B" }}>
+            {decodeURIComponent(company?.toString() || "")}
+          </h1>
+          <Link
+            href={`/companies/${company}/review`}
+            className="text-white px-4 py-2 rounded hover:opacity-90 shadow-sm"
+            style={{ backgroundColor: "#3D348B" }}
+          >
+            Write a Review
+          </Link>
+        </div>
+
+        {/* Overview Card */}
+        <section className="border border-gray-200 rounded-2xl p-6 bg-white shadow-sm mb-8">
+          <h2 className="text-xl font-semibold mb-4 text-[#3D348B]">Company Overview</h2>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div>
+              <h3 className="font-medium mb-2">People Rating</h3>
+              <RatingDisplay rating={averageRating('peopleRating')} />
+            </div>
+            <div>
+              <h3 className="font-medium mb-2">Planet Rating</h3>
+              <RatingDisplay rating={averageRating('planetRating')} />
+            </div>
+            <div>
+              <h3 className="font-medium mb-2">Transparency Rating</h3>
+              <RatingDisplay rating={averageRating('transparencyRating')} />
+            </div>
+          </div>
+          <div className="mt-6 pt-6 border-t">
+            <h3 className="font-medium mb-2">Would Recommend</h3>
+            <div className="text-lg font-semibold text-[#44AF69]">
+              {recommendationPercentage()}% of reviewers
+            </div>
+          </div>
+        </section>
+
+        {/* Reviews List */}
+        <section>
+          <h2 className="text-xl font-semibold mb-4 text-[#3D348B]">
+            Reviews ({reviews.length})
+          </h2>
+          
+          <div className="space-y-6">
+            {reviews.map((review) => (
+              <article
+                key={review.id}
+                className="border border-gray-200 rounded-2xl p-6 bg-white shadow-sm"
+              >
+                <div className="flex justify-between mb-4">
+                  <div>
+                    <span className="text-sm text-gray-600">
+                      {review.selfIdentify === 'currentlyWork'
+                        ? 'Current Employee'
+                        : review.selfIdentify === 'usedToWork'
+                        ? 'Former Employee'
+                        : 'External Reviewer'}
+                    </span>
+                    <div className="mt-1">
+                      <RatingDisplay
+                        rating={
+                          (review.peopleRating +
+                            review.planetRating +
+                            review.transparencyRating) /
+                          3
+                        }
+                      />
+                    </div>
+                  </div>
+                  <span className="text-sm text-gray-600">
+                    {new Date(review.createdAt.toDate()).toLocaleDateString()}
+                  </span>
+                </div>
+
+                <div className="space-y-4">
+                  {review.peopleText && (
+                    <div>
+                      <h3 className="font-medium text-[#3D348B] mb-1">People</h3>
+                      <p className="text-sm">{review.peopleText}</p>
+                    </div>
+                  )}
+                  
+                  {review.planetText && (
+                    <div>
+                      <h3 className="font-medium text-[#3D348B] mb-1">Planet</h3>
+                      <p className="text-sm">{review.planetText}</p>
+                    </div>
+                  )}
+                  
+                  {review.transparencyText && (
+                    <div>
+                      <h3 className="font-medium text-[#3D348B] mb-1">
+                        Transparency
+                      </h3>
+                      <p className="text-sm">{review.transparencyText}</p>
+                    </div>
+                  )}
+
+                  {review.references && (
+                    <div className="text-sm text-gray-600 pt-2">
+                      <strong>References:</strong> {review.references}
+                    </div>
+                  )}
+                </div>
+              </article>
+            ))}
+
+            {reviews.length === 0 && (
+              <div className="text-center py-8 text-gray-500">
+                No reviews yet. Be the first to review this company!
+              </div>
+            )}
+          </div>
+        </section>
+      </div>
+    </main>
+  );
+}

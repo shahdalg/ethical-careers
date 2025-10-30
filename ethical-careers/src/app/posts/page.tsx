@@ -3,7 +3,7 @@
 // - Pulls posts from Firestore via getPosts()
 // - Filters by ?company= in the URL (optional)
 // - Shows a company header with total ★ rating (avg of available sub‑ratings)
-// - Renders each review card: People / Principles / Transparency
+// - Renders each review card: People / Planet / Transparency
 // - Colors: plum #3D348B (headings), green #44AF69 (accents)
 
 // app/posts/page.tsx — Reviews page (server component)
@@ -36,7 +36,7 @@ function averageRatings(posts: Post[]) {
 
   for (const p of posts) {
     const a = Number(p.peopleRating);
-    const b = Number(p.principlesRating);
+    const b = Number(p.planetRating);
     const c = Number(p.transparencyRating);
     if (Number.isFinite(a)) { pplSum += a; pplCnt++; sum += a; count++; }
     if (Number.isFinite(b)) { priSum += b; priCnt++; sum += b; count++; }
@@ -47,7 +47,7 @@ function averageRatings(posts: Post[]) {
   return {
     overall,
     people:       pplCnt ? pplSum / pplCnt : 0,
-    principles:   priCnt ? priSum / priCnt : 0,
+    planet:   priCnt ? priSum / priCnt : 0,
     transparency: traCnt ? traSum / traCnt : 0,
   };
 }
@@ -142,20 +142,24 @@ function ReviewCard({ p }: { p: Post }) {
             <div className="mt-1 text-sm text-gray-700">Rating: {p.peopleRating} / 5</div>
           )}
         </div>
+
         <div>
           <h3 className="font-semibold text-[#3D348B] flex items-center gap-2">
-            <img src="/images/globe-americas.svg" alt="" className="h-5 w-5" /> Principles
+            <img src="/images/globe-americas.svg" alt="" className="h-5 w-5" /> Planet
           </h3>
-          {p.principlesText && <p className="text-gray-800 whitespace-pre-wrap mt-1">{p.principlesText}</p>}
-          {Number.isFinite(Number(p.principlesRating)) && (
-            <div className="mt-1 text-sm text-gray-700">Rating: {p.principlesRating} / 5</div>
+          {p.planetText && <p className="text-gray-800 whitespace-pre-wrap mt-1">{p.planetText}</p>}
+          {Number.isFinite(Number(p.planetRating)) && (
+            <div className="mt-1 text-sm text-gray-700">Rating: {p.planetRating} / 5</div>
           )}
         </div>
+
         <div className="md:col-span-2">
           <h3 className="font-semibold text-[#3D348B] flex items-center gap-2">
             <img src="/images/eyeglasses.svg" alt="" className="h-5 w-5" /> Transparency
           </h3>
-          {p.transparencyText && <p className="text-gray-800 whitespace-pre-wrap mt-1">{p.transparencyText}</p>}
+          {p.transparencyText && (
+            <p className="text-gray-800 whitespace-pre-wrap mt-1">{p.transparencyText}</p>
+          )}
           {Number.isFinite(Number(p.transparencyRating)) && (
             <div className="mt-1 text-sm text-gray-700">Rating: {p.transparencyRating} / 5</div>
           )}
@@ -164,6 +168,7 @@ function ReviewCard({ p }: { p: Post }) {
     </article>
   );
 }
+
 
 function Stat({ label, value }: { label: string; value: number }) {
   return (
@@ -193,14 +198,14 @@ export default async function Page({ searchParams }: { searchParams: Promise<SP>
   const parts = [
     `${companyName} averages ${avg.overall.toFixed(2)}/5 overall`,
     `People ${avg.people.toFixed(2)}`,
-    `Principles ${avg.principles.toFixed(2)}`,
+    `Planet ${avg.planet.toFixed(2)}`,
     `Transparency ${avg.transparency.toFixed(2)}`,
   ];
   const summary = parts.join(" · ");
 
   return (
-    <main className="bg-gray-50 text-gray-800 min-h-screen">
-      <Navbar showLogin={false} />
+  <main className="bg-gray-50 text-gray-800 min-h-screen">
+    <Navbar />
 
       <div className="p-8 max-w-6xl mx-auto">
         <CompanyHeader
@@ -213,7 +218,7 @@ export default async function Page({ searchParams }: { searchParams: Promise<SP>
         <div className="mt-6 rounded-xl bg-white p-4 border border-gray-200">
           <div className="grid gap-3 sm:grid-cols-3">
             <Stat label="People" value={avg.people} />
-            <Stat label="Principles" value={avg.principles} />
+            <Stat label="Planet" value={avg.planet} />
             <Stat label="Transparency" value={avg.transparency} />
           </div>
         </div>
