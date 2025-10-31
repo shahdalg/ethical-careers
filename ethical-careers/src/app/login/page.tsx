@@ -21,7 +21,7 @@ export default function LoginPage() {
     try {
       await signInWithEmailAndPassword(auth, email, password);
       // redirect wherever your app should go after login
-      router.push("/dashboard");
+      router.push("/");
     } catch (err: any) {
       // map common Firebase errors to friendly messages
       const code = err?.code as string | undefined;
@@ -69,10 +69,17 @@ export default function LoginPage() {
           onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = "#2E256E")} // darker on hover
           onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = "#5E4BB8")} // back to original
         >
-          Submit
+          Login
         </button>
+
+        <p className="text-sm text-center mt-2">
+          Don’t have an account?{" "}
+          <a href="/signup" className="text-blue-600 hover:underline">
+            Click here
+          </a>
+        </p>
+
       </form>
     </main>
   );
 }
-
