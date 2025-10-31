@@ -65,7 +65,7 @@ export default function Home() {
             Powered by community-driven reviews and insight.
           </p>
           <a
-            href="#companies"
+            href="/companies"
             className="bg-[#F7B801] text-gray-900 px-8 py-3 rounded-lg font-medium shadow-lg hover:shadow-xl active:scale-[.98] transition"
           >
             Explore Companies
