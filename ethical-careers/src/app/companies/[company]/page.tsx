@@ -43,19 +43,19 @@ export default function CompanyPage() {
   useEffect(() => {
     const fetchReviews = async () => {
       if (!company) return;
-      
+
       try {
         const q = query(
           collection(db, "posts"),
           where("company", "==", decodeURIComponent(company.toString()))
         );
-        
+
         const querySnapshot = await getDocs(q);
         const reviewsData = querySnapshot.docs.map(doc => ({
           id: doc.id,
           ...doc.data()
         })) as Review[];
-        
+
         setReviews(reviewsData);
       } catch (err) {
         console.error(err);
@@ -72,9 +72,8 @@ export default function CompanyPage() {
       {[1, 2, 3, 4, 5].map((star) => (
         <span
           key={star}
-          className={`text-lg ${
-            star <= rating ? 'text-yellow-500' : 'text-gray-300'
-          }`}
+          className={`text-lg ${star <= rating ? 'text-yellow-500' : 'text-gray-300'
+            }`}
         >
           ★
         </span>
@@ -98,9 +97,16 @@ export default function CompanyPage() {
 
       <div className="p-8 max-w-6xl mx-auto">
         <div className="flex justify-between items-center mb-8">
-          <h1 className="text-3xl font-bold" style={{ color: "#3D348B" }}>
-            {decodeURIComponent(company?.toString() || "")}
+          <h1 className="text-2xl font-bold">
+            {(() => {
+              const name = decodeURIComponent(company?.toString() || "");
+              return name
+                .split(" ")
+                .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+                .join("-");
+            })()}
           </h1>
+
           <Link
             href={`/companies/${company}/review`}
             className="text-white px-4 py-2 rounded hover:opacity-90 shadow-sm"
@@ -140,7 +146,7 @@ export default function CompanyPage() {
           <h2 className="text-xl font-semibold mb-4 text-[#3D348B]">
             Reviews ({reviews.length})
           </h2>
-          
+
           <div className="space-y-6">
             {reviews.map((review) => (
               <article
@@ -153,8 +159,8 @@ export default function CompanyPage() {
                       {review.selfIdentify === 'currentlyWork'
                         ? 'Current Employee'
                         : review.selfIdentify === 'usedToWork'
-                        ? 'Former Employee'
-                        : 'External Reviewer'}
+                          ? 'Former Employee'
+                          : 'External Reviewer'}
                     </span>
                     <div className="mt-1">
                       <RatingDisplay
@@ -179,14 +185,14 @@ export default function CompanyPage() {
                       <p className="text-sm">{review.peopleText}</p>
                     </div>
                   )}
-                  
+
                   {review.planetText && (
                     <div>
                       <h3 className="font-medium text-[#3D348B] mb-1">Planet</h3>
                       <p className="text-sm">{review.planetText}</p>
                     </div>
                   )}
-                  
+
                   {review.transparencyText && (
                     <div>
                       <h3 className="font-medium text-[#3D348B] mb-1">
