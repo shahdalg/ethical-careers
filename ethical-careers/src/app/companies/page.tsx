@@ -54,7 +54,7 @@ export default function CompaniesPage() {
 
   return (
     <main className="min-h-screen p-8 bg-gray-50 text-gray-800">
-      <h1 className="text-3xl font-bold mb-8 text-[#3D348B]">Ethical Companies Directory</h1>
+      <h1 className="text-3xl font-bold mb-8 text-[#3D348B]">Company Reviews</h1>
 
       {/* Search + Filter */}
       <div className="mb-6 space-y-4">
