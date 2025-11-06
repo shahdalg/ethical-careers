@@ -1,10 +1,9 @@
 "use client"; // 👈 must be the very first line
-import { auth } from "../../lib/firebase"; // import from central file
+import { auth } from "../../lib/firebase";
 import { useRouter } from "next/navigation";
 
 import React, { useState } from "react";
-
-import {signInWithEmailAndPassword} from "firebase/auth";
+import { signInWithEmailAndPassword } from "firebase/auth";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -17,15 +16,18 @@ export default function LoginPage() {
     e.preventDefault();
     setError(null);
     setLoading(true);
-    alert(`Welcome, ${email}!`);
+
     try {
       await signInWithEmailAndPassword(auth, email, password);
-      // redirect wherever your app should go after login
+      // ✅ Redirect after successful login — navbar will show on the next page
       router.push("/");
     } catch (err: any) {
-      // map common Firebase errors to friendly messages
       const code = err?.code as string | undefined;
-      if (code === "auth/user-not-found" || code === "auth/wrong-password" || code === "auth/invalid-email")
+      if (
+        code === "auth/user-not-found" ||
+        code === "auth/wrong-password" ||
+        code === "auth/invalid-email"
+      )
         setError("Incorrect email or password.");
       else setError("Could not sign you in. Please try again.");
     } finally {
@@ -63,13 +65,20 @@ export default function LoginPage() {
           />
         </label>
 
+        {error && <p className="text-sm text-red-600 -mt-2">{error}</p>}
+
         <button
+          type="submit"
           className="text-white font-semibold py-2 px-4 rounded transition-colors"
           style={{ backgroundColor: "#3D348B" }}
-          onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = "#2E256E")} // darker on hover
-          onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = "#5E4BB8")} // back to original
+          onMouseEnter={(e) =>
+            (e.currentTarget.style.backgroundColor = "#2E256E")
+          }
+          onMouseLeave={(e) =>
+            (e.currentTarget.style.backgroundColor = "#5E4BB8")
+          }
         >
-          Login
+          {loading ? "Signing in..." : "Login"}
         </button>
 
         <p className="text-sm text-center mt-2">
@@ -78,8 +87,8 @@ export default function LoginPage() {
             Click here
           </a>
         </p>
-
       </form>
     </main>
   );
 }
+
