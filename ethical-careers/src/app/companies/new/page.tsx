@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { addCompany } from "@/lib/addCompany";
-import Navbar from "@/app/components/page";
+import Navbar from "@/components/Navbar";
 
 export default function NewCompanyPage() {
   const router = useRouter();

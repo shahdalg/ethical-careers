@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { collection, getDocs } from "firebase/firestore";
 import { db } from "@/lib/firebase";
+import Button from "@/components/Button";
 
 interface Company {
   id: string;
@@ -54,7 +55,14 @@ export default function CompaniesPage() {
 
   return (
     <main className="min-h-screen p-8 bg-gray-50 text-gray-800">
-      <h1 className="text-3xl font-bold mb-8 text-[#3D348B]">Ethical Companies Directory</h1>
+      <div className="flex justify-between items-center mb-8">
+        <h1 className="text-3xl font-bold text-[#3D348B]">Company Reviews</h1>
+        <Link href="/companies/new">
+          <Button style={{ backgroundColor: "#3D348B" }}>
+            Submit New Company
+          </Button>
+        </Link>
+      </div>
 
       {/* Search + Filter */}
       <div className="mb-6 space-y-4">
@@ -104,6 +112,9 @@ export default function CompaniesPage() {
       {filteredCompanies.length === 0 && (
         <p className="text-center text-gray-500 mt-8">No companies found matching your criteria.</p>
       )}
+      
     </main>
+    
   );
+  
 }
