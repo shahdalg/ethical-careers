@@ -10,7 +10,7 @@ export default function CompanyReviewForm() {
   const router = useRouter();
   const { company } = useParams(); // dynamic URL param (e.g. /companies/google/review)
 
-  // Self Identify
+  // Self Identify 4
   const [selfIdentify, setSelfIdentify] = useState("");
 
   // People
