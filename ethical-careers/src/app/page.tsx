@@ -37,66 +37,7 @@ const Home = () => {
 
   return (
     <main className="flex flex-col min-h-screen bg-gray-50 text-gray-800 font-jakarta">
-      {/* Top Navigation Bar */}
-     {/* Top Navigation Bar */}
-<header className="sticky top-0 z-50 backdrop-blur bg-white/70 border-b border-gray-200 shadow-sm">
-  <div className="flex justify-between items-center px-8 py-4 max-w-6xl mx-auto">
-    <div className="flex items-center gap-3">
-      <div className="h-8 w-8 bg-[#44AF69] rounded rotate-6"></div>
-      <h1 className="font-semibold text-lg text-[#3D348B] tracking-tight">
-        Ethical Careers 🌱
-      </h1>
-    </div>
-
-    {/* 👇 Switch nav depending on auth */}
-    {!user ? (
-      <nav className="hidden md:flex gap-8 text-sm">
-        <a href="#companies" className="hover:text-[#3D348B] transition">Companies</a>
-        <a href="#rankings" className="hover:text-[#3D348B] transition">Rankings</a>
-        <a href="#how" className="hover:text-[#3D348B] transition">How it works</a>
-        <a href="#contact" className="hover:text-[#3D348B] transition">Contact</a>
-        <a 
-          href="/login"
-          className="bg-[#7678ED] text-white px-4 py-2 rounded-md shadow-md hover:brightness-110 transition"
-        >
-          Login
-        </a>
-      </nav>
-    ) : (
-      <nav className="hidden md:flex gap-8 text-sm items-center relative">
-        <a href="#companies" className="hover:text-[#3D348B] transition">Companies</a>
-        <a href="#how" className="hover:text-[#3D348B] transition">How it works</a>
-        <a href="#contact" className="hover:text-[#3D348B] transition">Contact</a>
-
-        {/* Profile dropdown */}
-        <div className="relative group">
-          <button
-            title={user.email ?? "Profile"}
-            className="flex items-center justify-center w-9 h-9 rounded-full bg-[#3D348B] text-white font-semibold shadow hover:opacity-90 transition"
-          >
-            {user.email?.[0]?.toUpperCase() ?? "U"}
-          </button>
-
-          {/* Dropdown Menu */}
-          <div className="absolute right-0 mt-2 w-40 rounded-lg border border-gray-200 bg-white shadow-lg opacity-0 scale-95 group-hover:opacity-100 group-hover:scale-100 transition-all duration-200">
-            <a
-              href="/profile"
-              className="block px-4 py-2 text-gray-700 hover:bg-gray-50 rounded-t-lg"
-            >
-              Profile
-            </a>
-            <button
-              onClick={() => auth.signOut()}
-              className="w-full text-left px-4 py-2 text-[#3D348B] hover:bg-[#3D348B]/10 rounded-b-lg"
-            >
-              Logout
-            </button>
-          </div>
-        </div>
-      </nav>
-    )}
-  </div>
-</header>
+  {/* Navbar is provided globally in the layout — no local Navbar here to avoid duplicates */}
 
 
       {/* Hero Section with green background + decorative images */}

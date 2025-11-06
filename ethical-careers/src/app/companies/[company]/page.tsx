@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
-import Navbar from "@/components/Navbar";
+// Navbar is now provided globally in the app layout
 import Comment, { CommentData } from "@/components/Comment";
 import { db } from "@/lib/firebase";
 import { collection, query, where, getDocs, DocumentData } from "firebase/firestore";
@@ -112,7 +112,6 @@ export default function CompanyPage() {
   if (loading) {
     return (
       <main className="bg-gray-50 text-gray-800 min-h-screen">
-        <Navbar />
         <div className="p-8">Loading...</div>
       </main>
     );
@@ -120,7 +119,6 @@ export default function CompanyPage() {
 
   return (
     <main className="bg-gray-50 text-gray-800 min-h-screen">
-      <Navbar />
 
       <div className="p-8 max-w-6xl mx-auto">
         <div className="flex justify-between items-center mb-8">

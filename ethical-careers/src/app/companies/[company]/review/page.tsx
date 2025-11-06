@@ -2,7 +2,6 @@
 
 import { useState } from "react";
 import { useParams, useRouter } from "next/navigation";
-import Navbar from "@/components/Navbar";
 import { db } from "@/lib/firebase"; // adjust path if needed
 import { collection, addDoc, Timestamp } from "firebase/firestore";
 
@@ -113,7 +112,6 @@ export default function CompanyReviewForm() {
 
   return (
     <main className="bg-gray-50 text-gray-800 min-h-screen">
-      <Navbar />
 
       <div className="p-8 flex flex-col items-center">
         <h1 className="text-2xl font-bold mb-6" style={{ color: "#3D348B" }}>

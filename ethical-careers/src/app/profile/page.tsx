@@ -127,55 +127,6 @@ export default function ProfilePage() {
   // -------------------- UI --------------------
   return (
     <main className="min-h-screen bg-gray-50 text-gray-800">
-      {/* Logged-in navbar with profile dropdown (Home + Logout) */}
-      <header className="sticky top-0 z-40 backdrop-blur bg-white/80 border-b border-gray-200">
-        <div className="mx-auto flex max-w-6xl items-center justify-between px-6 py-4">
-          <Link href="/" className="inline-flex items-center gap-3">
-            <div className="h-8 w-8 bg-[#44AF69] rounded rotate-6" />
-            <span className="text-lg font-semibold text-[#3D348B] tracking-tight">
-              Ethical Careers 🌱
-            </span>
-          </Link>
-
-          {user && (
-            <nav className="hidden md:flex items-center gap-8 text-sm">
-              <Link href="/#companies" className="hover:text-[#3D348B] transition">
-                Companies
-              </Link>
-              <Link href="/#how" className="hover:text-[#3D348B] transition">
-                How it works
-              </Link>
-              <Link href="/#contact" className="hover:text-[#3D348B] transition">
-                Contact
-              </Link>
-
-              {/* Profile dropdown */}
-              <div className="relative group">
-                <button
-                  className="flex items-center justify-center w-9 h-9 rounded-full bg-[#3D348B] text-white font-semibold shadow hover:opacity-90 transition"
-                  title={user.email ?? "Profile"}
-                >
-                  {initials}
-                </button>
-                <div className="absolute right-0 mt-2 w-40 rounded-lg border border-gray-200 bg-white shadow-lg opacity-0 scale-95 group-hover:opacity-100 group-hover:scale-100 transition-all duration-200">
-                  <Link
-                    href="/"
-                    className="block px-4 py-2 text-gray-700 hover:bg-gray-50 rounded-t-lg"
-                  >
-                    Home
-                  </Link>
-                  <button
-                    onClick={() => signOut(auth)}
-                    className="w-full text-left px-4 py-2 text-[#3D348B] hover:bg-[#3D348B]/10 rounded-b-lg"
-                  >
-                    Logout
-                  </button>
-                </div>
-              </div>
-            </nav>
-          )}
-        </div>
-      </header>
 
       {/* Profile header */}
       <section className="mx-auto max-w-6xl px-6 pt-10 pb-4">

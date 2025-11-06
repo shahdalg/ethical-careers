@@ -3,7 +3,6 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { addCompany } from "@/lib/addCompany";
-import Navbar from "@/components/Navbar";
 
 export default function NewCompanyPage() {
   const router = useRouter();
@@ -37,7 +36,6 @@ export default function NewCompanyPage() {
 
   return (
     <main className="bg-gray-50 text-gray-800 min-h-screen">
-      <Navbar />
 
       <div className="p-8 flex flex-col items-center">
         <h1 className="text-2xl font-bold mb-6" style={{ color: "#3D348B" }}>
