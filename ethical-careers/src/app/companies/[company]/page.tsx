@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import Navbar from "@/components/Navbar";
+import Comment, { CommentData } from "@/components/Comment";
 import { db } from "@/lib/firebase";
 import { collection, query, where, getDocs, DocumentData } from "firebase/firestore";
 
@@ -26,6 +27,28 @@ export default function CompanyPage() {
   const { company } = useParams();
   const [reviews, setReviews] = useState<Review[]>([]);
   const [loading, setLoading] = useState(true);
+  const [commentsMap, setCommentsMap] = useState<Record<string, CommentData[]>>({});
+
+  const fetchComments = async (reviewId: string) => {
+    try {
+      const q = query(
+        collection(db, "comments"),
+        where("reviewId", "==", reviewId)
+      );
+      const snapshot = await getDocs(q);
+      const comments = snapshot.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data()
+      })) as CommentData[];
+      
+      setCommentsMap(prev => ({
+        ...prev,
+        [reviewId]: comments
+      }));
+    } catch (error) {
+      console.error('Error fetching comments:', error);
+    }
+  };
 
   // Calculate average ratings
   const averageRating = (field: 'peopleRating' | 'planetRating' | 'transparencyRating') => {
@@ -57,6 +80,10 @@ export default function CompanyPage() {
         })) as Review[];
 
         setReviews(reviewsData);
+        // Fetch comments for each review
+        reviewsData.forEach(review => {
+          fetchComments(review.id);
+        });
       } catch (err) {
         console.error(err);
       } finally {
@@ -207,6 +234,18 @@ export default function CompanyPage() {
                       <strong>References:</strong> {review.references}
                     </div>
                   )}
+
+                  {/* Comments Section */}
+                  <div className="mt-4 pt-4 border-t border-gray-100">
+                    <h3 className="font-medium text-[#3D348B] mb-2">
+                      Comments
+                    </h3>
+                    <Comment
+                      reviewId={review.id}
+                      comments={commentsMap[review.id] || []}
+                      onCommentAdded={() => fetchComments(review.id)}
+                    />
+                  </div>
                 </div>
               </article>
             ))}
