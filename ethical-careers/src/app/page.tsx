@@ -1,23 +1,28 @@
 "use client";
-import { useEffect, useRef } from "react";
-
+import { useEffect, useRef, useState } from "react";
+import { onAuthStateChanged, User } from "firebase/auth";
+import { auth } from "@/lib/firebase"; // ← adjust path if you don't use @ alias
 
 export default function Home() {
   const revealRefs = useRef<Array<HTMLElement | null>>([]);
   revealRefs.current = [];
 
+  // 🔐 Track auth state
+  const [user, setUser] = useState<User | null>(auth.currentUser);
+  useEffect(() => {
+    const unsub = onAuthStateChanged(auth, (u) => setUser(u));
+    return () => unsub();
+  }, []);
+
   useEffect(() => {
     const io = new IntersectionObserver(
       (entries) => {
         entries.forEach((entry) => {
-          if (entry.isIntersecting) {
-            entry.target.classList.add("reveal-in");
-          }
+          if (entry.isIntersecting) entry.target.classList.add("reveal-in");
         });
       },
       { threshold: 0.15 }
     );
-
     revealRefs.current.forEach((el) => el && io.observe(el));
     return () => io.disconnect();
   }, []);
@@ -29,28 +34,66 @@ export default function Home() {
   return (
     <main className="flex flex-col min-h-screen bg-gray-50 text-gray-800 font-jakarta">
       {/* Top Navigation Bar */}
-      <header className="sticky top-0 z-50 backdrop-blur bg-white/70 border-b border-gray-200 shadow-sm">
-        <div className="flex justify-between items-center px-8 py-4 max-w-6xl mx-auto">
-          <div className="flex items-center gap-3">
-            <div className="h-8 w-8 bg-[#44AF69] rounded rotate-6"></div>
-            <h1 className="font-semibold text-lg text-[#3D348B] tracking-tight">
-              Ethical Careers 🌱
-            </h1>
-          </div>
-          <nav className="hidden md:flex gap-8 text-sm">
-            <a href="#companies" className="hover:text-[#3D348B] transition">Companies</a>
-            <a href="#rankings" className="hover:text-[#3D348B] transition">Rankings</a>
-            <a href="#how" className="hover:text-[#3D348B] transition">How it works</a>
-            <a href="#contact" className="hover:text-[#3D348B] transition">Contact</a>
-            <a 
-              href="/login"
-              className="bg-[#7678ED] text-white px-4 py-2 rounded-md shadow-md hover:brightness-110 transition"
+     {/* Top Navigation Bar */}
+<header className="sticky top-0 z-50 backdrop-blur bg-white/70 border-b border-gray-200 shadow-sm">
+  <div className="flex justify-between items-center px-8 py-4 max-w-6xl mx-auto">
+    <div className="flex items-center gap-3">
+      <div className="h-8 w-8 bg-[#44AF69] rounded rotate-6"></div>
+      <h1 className="font-semibold text-lg text-[#3D348B] tracking-tight">
+        Ethical Careers 🌱
+      </h1>
+    </div>
+
+    {/* 👇 Switch nav depending on auth */}
+    {!user ? (
+      <nav className="hidden md:flex gap-8 text-sm">
+        <a href="#companies" className="hover:text-[#3D348B] transition">Companies</a>
+        <a href="#rankings" className="hover:text-[#3D348B] transition">Rankings</a>
+        <a href="#how" className="hover:text-[#3D348B] transition">How it works</a>
+        <a href="#contact" className="hover:text-[#3D348B] transition">Contact</a>
+        <a 
+          href="/login"
+          className="bg-[#7678ED] text-white px-4 py-2 rounded-md shadow-md hover:brightness-110 transition"
+        >
+          Login
+        </a>
+      </nav>
+    ) : (
+      <nav className="hidden md:flex gap-8 text-sm items-center relative">
+        <a href="#companies" className="hover:text-[#3D348B] transition">Companies</a>
+        <a href="#how" className="hover:text-[#3D348B] transition">How it works</a>
+        <a href="#contact" className="hover:text-[#3D348B] transition">Contact</a>
+
+        {/* Profile dropdown */}
+        <div className="relative group">
+          <button
+            title={user.email ?? "Profile"}
+            className="flex items-center justify-center w-9 h-9 rounded-full bg-[#3D348B] text-white font-semibold shadow hover:opacity-90 transition"
+          >
+            {user.email?.[0]?.toUpperCase() ?? "U"}
+          </button>
+
+          {/* Dropdown Menu */}
+          <div className="absolute right-0 mt-2 w-40 rounded-lg border border-gray-200 bg-white shadow-lg opacity-0 scale-95 group-hover:opacity-100 group-hover:scale-100 transition-all duration-200">
+            <a
+              href="/profile"
+              className="block px-4 py-2 text-gray-700 hover:bg-gray-50 rounded-t-lg"
             >
-              Login
+              Profile
             </a>
-          </nav>
+            <button
+              onClick={() => auth.signOut()}
+              className="w-full text-left px-4 py-2 text-[#3D348B] hover:bg-[#3D348B]/10 rounded-b-lg"
+            >
+              Logout
+            </button>
+          </div>
         </div>
-      </header>
+      </nav>
+    )}
+  </div>
+</header>
+
 
       {/* Hero Section with green background + decorative images */}
       <section className="relative overflow-hidden">
@@ -84,7 +127,6 @@ export default function Home() {
             className="pointer-events-none select-none absolute -bottom-0 left-10 w-28 md:w-90 opacity-100 rotate-6 animate-slow-spin"
             aria-hidden="true"
           />
-
           <img
             src="/images/needle.png"
             alt="Needle graphic"
@@ -142,91 +184,88 @@ export default function Home() {
       </section>
 
       {/* Rankings Section: People / Planet / Principles */}
-<section
-  id="rankings"
-  ref={setRevealRef}
-  className="reveal-start px-6 py-20 max-w-6xl mx-auto"
->
-  <h3 className="text-3xl font-bold text-center text-[#3D348B] mb-10">
-    Ranking Categories
-  </h3>
-
-  <div className="grid md:grid-cols-3 gap-8">
-    {[
-      {
-        title: "People",
-        icon: "/images/people-fill.svg",
-        desc: "Employee well-being, pay equity, inclusion, and safety.",
-      },
-      {
-        title: "Planet",
-        icon: "/images/globe-americas.svg",
-        desc: "Emissions, materials, circularity, and supplier sustainability.",
-      },
-      {
-        title: "Transparency",
-        icon: "/images/eyeglasses.svg",
-        desc: "Disclosure, governance, privacy, and community impact.",
-      },
-    ].map((card) => (
-      <div
-        key={card.title}
-        className="rounded-2xl border border-gray-200 bg-white p-6 shadow-md hover:shadow-lg transition-all"
+      <section
+        id="rankings"
+        ref={setRevealRef}
+        className="reveal-start px-6 py-20 max-w-6xl mx-auto"
       >
-        <div className="flex items-center gap-3 mb-3">
-          <img src={card.icon} alt="" aria-hidden="true" className="h-8 w-8" />
-          <h4 className="text-xl font-semibold text-gray-800">{card.title}</h4>
+        <h3 className="text-3xl font-bold text-center text-[#3D348B] mb-10">
+          Ranking Categories
+        </h3>
+
+        <div className="grid md:grid-cols-3 gap-8">
+          {[
+            {
+              title: "People",
+              icon: "/images/people-fill.svg",
+              desc: "Employee well-being, pay equity, inclusion, and safety.",
+            },
+            {
+              title: "Planet",
+              icon: "/images/globe-americas.svg",
+              desc: "Emissions, materials, circularity, and supplier sustainability.",
+            },
+            {
+              title: "Transparency",
+              icon: "/images/eyeglasses.svg",
+              desc: "Disclosure, governance, privacy, and community impact.",
+            },
+          ].map((card) => (
+            <div
+              key={card.title}
+              className="rounded-2xl border border-gray-200 bg-white p-6 shadow-md hover:shadow-lg transition-all"
+            >
+              <div className="flex items-center gap-3 mb-3">
+                <img src={card.icon} alt="" aria-hidden="true" className="h-8 w-8" />
+                <h4 className="text-xl font-semibold text-gray-800">{card.title}</h4>
+              </div>
+              <p className="text-gray-600 leading-relaxed">{card.desc}</p>
+            </div>
+          ))}
         </div>
-        <p className="text-gray-600 leading-relaxed">{card.desc}</p>
-      </div>
-    ))}
-  </div>
-</section>
+      </section>
 
-{/* ✨ How It Works */}
-<section
-  id="how"
-  ref={setRevealRef}
-  className="reveal-start relative overflow-hidden py-28 w-full bg-[#FAFAFA]"
->
-  <div className="px-6 max-w-6xl mx-auto">
-    <h3 className="text-4xl font-extrabold text-center text-[#3D348B] mb-16 tracking-wide">
-      How It Works ✨
-    </h3>
+      {/* ✨ How It Works */}
+      <section
+        id="how"
+        ref={setRevealRef}
+        className="reveal-start relative overflow-hidden py-28 w-full bg-[#FAFAFA]"
+      >
+        <div className="px-6 max-w-6xl mx-auto">
+          <h3 className="text-4xl font-extrabold text-center text-[#3D348B] mb-16 tracking-wide">
+            How It Works ✨
+          </h3>
 
-    <ol className="grid md:grid-cols-4 gap-8">
-      {[
-        { n: "01", t: "Create an account", d: "Sign up with your email to begin." },
-        { n: "02", t: "Find a company", d: "Explore companies that align with your field." },
-        { n: "03", t: "Fill the survey", d: "Share your thoughts anonymously." },
-        { n: "04", t: "See the scores", d: "See the ethics reviews and ratings." },
-      ].map((s) => (
-        <li
-          key={s.n}
-          className="relative rounded-2xl border border-[#F7E08A] bg-white p-8 shadow-md hover:shadow-lg transition-all hover:-translate-y-1"
-        >
-          <div className="text-5xl font-extrabold text-[#F7B801] opacity-90 mb-3 font-serif">
-            {s.n}
-          </div>
-          <div className="mt-1 text-lg font-semibold text-[#3D348B]">
-            {s.t}
-          </div>
-          <p className="text-sm text-gray-700 mt-1 leading-relaxed">{s.d}</p>
-        </li>
-      ))}
-    </ol>
-  </div>
-
-
-</section>
-
+          <ol className="grid md:grid-cols-4 gap-8">
+            {[
+              { n: "01", t: "Create an account", d: "Sign up with your email to begin." },
+              { n: "02", t: "Find a company", d: "Explore companies that align with your field." },
+              { n: "03", t: "Fill the survey", d: "Share your thoughts anonymously." },
+              { n: "04", t: "See the scores", d: "See the ethics reviews and ratings." },
+            ].map((s) => (
+              <li
+                key={s.n}
+                className="relative rounded-2xl border border-[#F7E08A] bg-white p-8 shadow-md hover:shadow-lg transition-all hover:-translate-y-1"
+              >
+                <div className="text-5xl font-extrabold text-[#F7B801] opacity-90 mb-3 font-serif">
+                  {s.n}
+                </div>
+                <div className="mt-1 text-lg font-semibold text-[#3D348B]">
+                  {s.t}
+                </div>
+                <p className="text-sm text-gray-700 mt-1 leading-relaxed">{s.d}</p>
+              </li>
+            ))}
+          </ol>
+        </div>
+      </section>
 
       {/* About / CTA */}
       <section id="about" ref={setRevealRef} className="reveal-start bg-[#3D348B]/5 py-20 text-center px-6">
         <h3 className="text-2xl font-bold text-[#3D348B] mb-4">Why Ethical Careers?</h3>
         <p className="max-w-3xl mx-auto text-gray-700 leading-relaxed">
           Today’s professionals seek more than a paycheck, we want purpose.
-          Our platform helps students and job‑seekers evaluate the ethical standing of companies
+          Our platform helps students and job-seekers evaluate the ethical standing of companies
           through verified reviews.
         </p>
       </section>
@@ -258,3 +297,4 @@ export default function Home() {
     </main>
   );
 }
+
