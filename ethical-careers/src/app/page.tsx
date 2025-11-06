@@ -15,6 +15,9 @@ const Home = () => {
     return () => unsub();
   }, []);
 
+  // router for client-side navigation
+  const router = useRouter();
+
   useEffect(() => {
     const io = new IntersectionObserver(
       (entries) => {
@@ -108,12 +111,18 @@ const Home = () => {
             Discover companies that align with your values.
             Powered by community-driven reviews and insight.
           </p>
-          <a
-            href="/companies"
+          <button
+            type="button"
+            onClick={() => {
+              // If user is signed in, go straight to companies. Otherwise
+              // redirect to login and include `from` so we can return after sign-in.
+              if (user) router.push('/companies');
+              else router.push('/login?from=/companies');
+            }}
             className="bg-[#F7B801] text-gray-900 px-8 py-3 rounded-lg font-medium shadow-lg hover:shadow-xl active:scale-[.98] transition"
           >
             Explore Companies
-          </a>
+          </button>
 
           {/* decorative: factory girl & compass */}
           <img

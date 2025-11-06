@@ -1,12 +1,13 @@
 "use client"; // 👈 must be the very first line
 import { auth } from "../../lib/firebase";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 
 import React, { useState } from "react";
 import { signInWithEmailAndPassword } from "firebase/auth";
 
 export default function LoginPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
@@ -18,9 +19,10 @@ export default function LoginPage() {
     setLoading(true);
 
     try {
-      await signInWithEmailAndPassword(auth, email, password);
-      // ✅ Redirect after successful login — navbar will show on the next page
-      router.push("/");
+  await signInWithEmailAndPassword(auth, email, password);
+  // Redirect after successful login — respect `from` query param if present
+  const from = searchParams?.get('from') ?? '/';
+  router.push(from);
     } catch (err: any) {
       const code = err?.code as string | undefined;
       if (

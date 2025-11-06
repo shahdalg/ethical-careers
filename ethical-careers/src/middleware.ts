@@ -14,22 +14,14 @@ const publicPaths = [
 ];
 
 export function middleware(request: NextRequest) {
-  const path = request.nextUrl.pathname;
-  
-  // Check if the path is public
-  if (publicRoutes.includes(path)) {
-    return NextResponse.next();
-  }
-
-  // Check if the path is a static resource
-  if (publicPaths.some(prefix => path.startsWith(prefix)) || path.match(/\.[a-zA-Z0-9]+$/)) {
-    return NextResponse.next();
-  }
-
-  // For all other routes, redirect to login
-  const loginUrl = new URL('/login', request.url);
-  loginUrl.searchParams.set('from', path);
-  return NextResponse.redirect(loginUrl);
+  // NOTE:
+  // Middleware cannot directly access Firebase client auth state.
+  // Previously this file unconditionally redirected non-public pages to /login
+  // which caused users to be redirected even after a successful sign-in.
+  // To avoid blocking authenticated users without a server-side session cookie,
+  // we will no-op here and let client-side protection (withAuth HOC) handle
+  // redirects after Firebase initializes.
+  return NextResponse.next();
 }
 
 export const config = {
