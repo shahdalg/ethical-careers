@@ -5,6 +5,7 @@ import Link from "next/link";
 import { collection, getDocs } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import Button from "@/components/Button";
+import { withAuth } from "@/lib/withAuth";
 
 interface Company {
   id: string;
@@ -14,7 +15,7 @@ interface Company {
   averageRating?: number;
 }
 
-export default function CompaniesPage() {
+function CompaniesPage() {
   const [companies, setCompanies] = useState<Company[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
@@ -118,3 +119,5 @@ export default function CompaniesPage() {
   );
   
 }
+
+export default withAuth(CompaniesPage);

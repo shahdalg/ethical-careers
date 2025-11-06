@@ -1,9 +1,10 @@
 "use client";
 import { useEffect, useRef, useState } from "react";
 import { onAuthStateChanged, User } from "firebase/auth";
-import { auth } from "@/lib/firebase"; // ← adjust path if you don't use @ alias
+import { auth } from "@/lib/firebase";
+import { useRouter } from 'next/navigation';
 
-export default function Home() {
+const Home = () => {
   const revealRefs = useRef<Array<HTMLElement | null>>([]);
   revealRefs.current = [];
 
@@ -124,13 +125,13 @@ export default function Home() {
           <img
             src="/images/Compss.png"
             alt="Compass graphic"
-            className="pointer-events-none select-none absolute -bottom-0 left-10 w-28 md:w-90 opacity-100 rotate-6 animate-slow-spin"
+            className="pointer-events-none select-none absolute -bottom-0 left-10 w-28 md:w-90 opacity-100 rotate-6"
             aria-hidden="true"
           />
           <img
             src="/images/needle.png"
             alt="Needle graphic"
-            className="pointer-events-none select-none absolute -bottom-0 left-10 w-28 md:w-90 opacity-100 rotate-6 animate-slow-spin"
+            className="pointer-events-none select-none absolute -bottom-0 left-10 w-28 md:w-90 opacity-100"
             aria-hidden="true"
           />
 
@@ -289,12 +290,13 @@ export default function Home() {
         <p className="text-sm">© {new Date().getFullYear()} Ethical Careers. Built with values 🌱</p>
       </footer>
 
-      {/* Local styles for reveal animations */}
       <style jsx>{`
         .reveal-start { opacity: 0; transform: translateY(12px); transition: all .6s ease; }
         .reveal-in { opacity: 1; transform: translateY(0); }
       `}</style>
     </main>
   );
-}
+};
+
+export default Home;
 
