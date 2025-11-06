@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useParams, useRouter } from "next/navigation";
-import Navbar from "@/app/components/page";
+import Navbar from "@/components/Navbar";
 import { db } from "@/lib/firebase"; // adjust path if needed
 import { collection, addDoc, Timestamp } from "firebase/firestore";
 
