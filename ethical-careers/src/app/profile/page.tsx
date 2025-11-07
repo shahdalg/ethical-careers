@@ -62,6 +62,7 @@ export default function ProfilePage() {
   // data
   const [posts, setPosts] = useState<Post[]>([]);
   const [comments, setComments] = useState<Comment[]>([]);
+  const [reviewMeta, setReviewMeta] = useState<Record<string, { companySlug?: string }>>({}); // map reviewId -> meta
   const [loadingData, setLoadingData] = useState(true);
   const [tab, setTab] = useState<"posts" | "comments">("posts");
   const initials = useMemo(() => {
@@ -138,6 +139,31 @@ export default function ProfilePage() {
 
         setPosts(postsData);
         setComments(commentsData);
+
+        // Build reviewId -> companySlug map for deep linking (comments may reference reviews not authored by user)
+        const uniqueReviewIds = Array.from(
+          new Set(commentsData.map(c => c.reviewId).filter(Boolean))
+        ).filter(id => !reviewMeta[id]);
+        if (uniqueReviewIds.length) {
+          const metaEntries: [string, { companySlug?: string }][] = [];
+          await Promise.all(
+            uniqueReviewIds.map(async (rid) => {
+              try {
+                const docRef = doc(db, "posts", rid);
+                const rDoc = await getDoc(docRef);
+                if (rDoc.exists()) {
+                  const data = rDoc.data() as any;
+                  metaEntries.push([rid, { companySlug: data.companySlug }]);
+                }
+              } catch (e) {
+                // ignore failures
+              }
+            })
+          );
+          if (metaEntries.length) {
+            setReviewMeta(prev => ({ ...prev, ...Object.fromEntries(metaEntries) }));
+          }
+        }
       } catch (e) {
         console.error("Failed to load profile data", e);
       } finally {
@@ -319,12 +345,21 @@ export default function ProfilePage() {
                         )
                       )}
                       <div className="mt-4">
-                        <Link
-                          href={p.companySlug ? `/companies/${p.companySlug}` : `/posts/${p.id}`}
-                          className="text-sm text-[#3D348B] hover:opacity-80"
-                        >
-                          View {isReview ? 'review' : 'post'} →
-                        </Link>
+                        {isReview && p.companySlug ? (
+                          <Link
+                            href={`/companies/${p.companySlug}#review-${p.id}`}
+                            className="text-sm text-[#3D348B] hover:opacity-80"
+                          >
+                            View review →
+                          </Link>
+                        ) : (
+                          <Link
+                            href={`/posts/${p.id}`}
+                            className="text-sm text-[#3D348B] hover:opacity-80"
+                          >
+                            View post →
+                          </Link>
+                        )}
                       </div>
                     </article>
                   );
@@ -366,8 +401,10 @@ export default function ProfilePage() {
                       </p>
                       <div className="mt-3">
                         <Link
-                          href={`/posts/${c.reviewId}`}
-                          className="text-sm text-[#3D348B] hover:opacity-80 font-medium inline-flex items-center gap-1"
+                          href={reviewMeta[c.reviewId]?.companySlug
+                            ? `/companies/${reviewMeta[c.reviewId]!.companySlug}#review-${c.reviewId}`
+                            : `#`}
+                          className="text-sm text-[#3D348B] hover:opacity-80 font-medium inline-flex items-center gap-1 disabled:opacity-40"
                         >
                           View review →
                         </Link>

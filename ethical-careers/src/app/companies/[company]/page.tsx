@@ -187,6 +187,7 @@ export default function CompanyPage() {
     fetchReviews();
   }, [company]);
 
+
   const RatingDisplay = ({ rating }: { rating: number }) => (
     <div className="flex items-center gap-1">
       {[1, 2, 3, 4, 5].map((star) => (
@@ -267,6 +268,7 @@ export default function CompanyPage() {
           <div className="space-y-6">
             {reviews.map((review) => (
               <article
+                id={`review-${review.id}`}
                 key={review.id}
                 className="border border-gray-200 rounded-2xl p-6 bg-white shadow-sm"
               >
