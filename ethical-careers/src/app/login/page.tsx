@@ -148,7 +148,7 @@ function LoginContent() {
               <div className="text-center py-4">
                 <div className="text-green-600 text-5xl mb-3">✓</div>
                 <p className="text-gray-700 mb-4">
-                  Password reset email sent! Check your inbox for instructions.
+                  Password reset email sent! Check your inbox for instructions (including your spam folder). 
                 </p>
                 <button
                   onClick={() => {
