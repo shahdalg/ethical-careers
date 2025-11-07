@@ -19,18 +19,38 @@ export interface CommentData {
 export default function Comment({ reviewId, onCommentAdded, comments }: CommentProps) {
   const [newComment, setNewComment] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   const handleSubmitComment = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!newComment.trim()) return;
 
     setIsSubmitting(true);
+    setError(null);
+
     try {
+      // Check with Perspective API first
+      const moderationResponse = await fetch('/api/perspective', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ text: newComment }),
+      });
+
+      const moderationResult = await moderationResponse.json();
+
+      if (!moderationResult.allowed) {
+        setError(moderationResult.message || 'Your comment contains inappropriate content.');
+        setIsSubmitting(false);
+        return;
+      }
+
+      // If approved, add the comment
       await addComment(reviewId, newComment);
       setNewComment('');
       onCommentAdded();
     } catch (error) {
       console.error('Error adding comment:', error);
+      setError('Failed to submit comment. Please try again.');
     } finally {
       setIsSubmitting(false);
     }
@@ -68,6 +88,11 @@ export default function Comment({ reviewId, onCommentAdded, comments }: CommentP
 
       {/* New Comment Form */}
       <form onSubmit={handleSubmitComment} className="space-y-2">
+        {error && (
+          <div className="p-3 bg-red-50 border border-red-200 rounded-lg text-sm text-red-700">
+            {error}
+          </div>
+        )}
         <textarea
           value={newComment}
           onChange={(e) => setNewComment(e.target.value)}

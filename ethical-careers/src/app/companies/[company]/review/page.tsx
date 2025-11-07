@@ -29,13 +29,58 @@ export default function CompanyReviewForm() {
 
   // References
   const [RefText, setRefText] = useState("");
+  const [error, setError] = useState<string | null>(null);
+
+  // Helper function to check text with Perspective API
+  const checkTextModeration = async (text: string): Promise<boolean> => {
+    try {
+      const response = await fetch('/api/perspective', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ text }),
+      });
+
+      const result = await response.json();
+      
+      if (!result.allowed) {
+        setError(result.message || 'Your content contains inappropriate language.');
+        return false;
+      }
+      
+      return true;
+    } catch (err) {
+      console.error('Moderation check failed:', err);
+      // Allow submission if moderation check fails (fallback behavior)
+      return true;
+    }
+  };
 
   // Submit handler
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!company) return alert("Invalid company URL");
 
+    setError(null);
+
     try {
+      // Combine all text fields to check for inappropriate content
+      const textsToCheck = [
+        peopleText,
+        planetText,
+        transparencyText,
+        RefText,
+      ].filter(text => text.trim().length > 0);
+
+      // Check each text field with Perspective API
+      for (const text of textsToCheck) {
+        const isAllowed = await checkTextModeration(text);
+        if (!isAllowed) {
+          // Error message already set by checkTextModeration
+          return;
+        }
+      }
+
+      // If all checks pass, submit the review
       await addDoc(collection(db, "posts"), {
         company: decodeURIComponent(company.toString()),
         selfIdentify,
@@ -117,6 +162,13 @@ export default function CompanyReviewForm() {
         <h1 className="text-2xl font-bold mb-6" style={{ color: "#3D348B" }}>
           Submit a Review for {decodeURIComponent(company?.toString() || "")}
         </h1>
+
+        {error && (
+          <div className="w-full max-w-lg mb-4 p-4 bg-red-50 border border-red-200 rounded-lg text-red-700">
+            <p className="font-semibold">Content Moderation Alert</p>
+            <p className="text-sm mt-1">{error}</p>
+          </div>
+        )}
 
         <form onSubmit={handleSubmit} className="flex flex-col gap-6 w-full max-w-lg">
           {/* Self Identify */}
