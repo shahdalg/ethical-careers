@@ -1,5 +1,21 @@
 import { auth } from './firebase';
-import { onAuthStateChanged, getIdToken } from 'firebase/auth';
+import { onAuthStateChanged, getIdToken, sendPasswordResetEmail } from 'firebase/auth';
+
+// Function to send password reset email
+export const resetPassword = async (email: string) => {
+  try {
+    await sendPasswordResetEmail(auth, email);
+    return { success: true };
+  } catch (error: any) {
+    console.error('Error sending password reset email:', error);
+    return { 
+      success: false, 
+      error: error.code === 'auth/user-not-found' 
+        ? 'No account found with this email address.' 
+        : 'Failed to send reset email. Please try again.'
+    };
+  }
+};
 
 // Function to manage auth state
 export const initAuth = () => {
