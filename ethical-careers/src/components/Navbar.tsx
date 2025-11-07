@@ -50,7 +50,6 @@ export default function Navbar() {
     <header className="sticky top-0 z-50 backdrop-blur bg-white/70 border-b border-gray-200 shadow-sm">
       <div className="flex justify-between items-center px-8 py-4 max-w-6xl mx-auto">
         <div className="flex items-center gap-3">
-          <div className="h-8 w-8 bg-[#44AF69] rounded rotate-6" />
           <Link href="/" className="font-semibold text-lg text-[#3D348B] tracking-tight">
             Ethical Careers 🌱
           </Link>

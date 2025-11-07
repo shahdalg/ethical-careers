@@ -1,13 +1,14 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { db } from "@/lib/firebase"; // adjust path if needed
-import { collection, addDoc, Timestamp } from "firebase/firestore";
+import { collection, addDoc, Timestamp, doc, getDoc } from "firebase/firestore";
 
 export default function CompanyReviewForm() {
   const router = useRouter();
   const { company } = useParams(); // dynamic URL param (e.g. /companies/google/review)
+  const [companyName, setCompanyName] = useState<string>("");
 
   // Self Identify 4
   const [selfIdentify, setSelfIdentify] = useState("");
@@ -30,6 +31,31 @@ export default function CompanyReviewForm() {
   // References
   const [RefText, setRefText] = useState("");
   const [error, setError] = useState<string | null>(null);
+
+  // Fetch proper company name from Firestore
+  useEffect(() => {
+    const fetchCompanyName = async () => {
+      if (!company) return;
+      
+      try {
+        const companySlug = company.toString();
+        const companyDocRef = doc(db, "companies", companySlug);
+        const companyDoc = await getDoc(companyDocRef);
+        
+        if (companyDoc.exists()) {
+          setCompanyName(companyDoc.data().name);
+        } else {
+          // Fallback to decoded slug with hyphens replaced
+          setCompanyName(decodeURIComponent(companySlug).replace(/-/g, " "));
+        }
+      } catch (err) {
+        console.error("Error fetching company name:", err);
+        setCompanyName(decodeURIComponent(company.toString()).replace(/-/g, " "));
+      }
+    };
+    
+    fetchCompanyName();
+  }, [company]);
 
   // Helper function to check text with Perspective API
   const checkTextModeration = async (text: string): Promise<boolean> => {
@@ -82,7 +108,7 @@ export default function CompanyReviewForm() {
 
       // If all checks pass, submit the review
       await addDoc(collection(db, "posts"), {
-        company: decodeURIComponent(company.toString()),
+        company: companyName,
         selfIdentify,
         peopleText,
         peopleRating: Number(peopleRating) || null,
@@ -160,7 +186,7 @@ export default function CompanyReviewForm() {
 
       <div className="p-8 flex flex-col items-center">
         <h1 className="text-2xl font-bold mb-6" style={{ color: "#3D348B" }}>
-          Submit a Review for {decodeURIComponent(company?.toString() || "")}
+          Submit a Review for {companyName || "Loading..."}
         </h1>
 
         {error && (

@@ -8,7 +8,7 @@ import Comment, { CommentData } from "@/components/Comment";
 import PreCompanySurveyModal from "@/components/PreCompanySurveyModal";
 import PostCompanySurveyModal from "@/components/PostCompanySurveyModal";
 import { db, auth } from "@/lib/firebase";
-import { collection, query, where, getDocs, DocumentData } from "firebase/firestore";
+import { collection, query, where, getDocs, DocumentData, doc, getDoc } from "firebase/firestore";
 import { getUserSurveyData, needsPreSurvey, needsPostSurvey } from "@/lib/surveyHelpers";
 import { onAuthStateChanged } from "firebase/auth";
 
@@ -32,6 +32,7 @@ export default function CompanyPage() {
   const [reviews, setReviews] = useState<Review[]>([]);
   const [loading, setLoading] = useState(true);
   const [commentsMap, setCommentsMap] = useState<Record<string, CommentData[]>>({});
+  const [companyName, setCompanyName] = useState<string>("");
   
   // Survey state
   const [userId, setUserId] = useState<string | null>(null);
@@ -63,9 +64,8 @@ export default function CompanyPage() {
   // Check survey status on mount
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
-      if (user && company) {
+      if (user && company && companyName) {
         setUserId(user.uid);
-        const companyName = decodeURIComponent(company.toString());
         
         console.log('🔍 Checking survey status for:', companyName);
         
@@ -95,7 +95,7 @@ export default function CompanyPage() {
     });
 
     return () => unsubscribe();
-  }, [company]);
+  }, [company, companyName]);
 
   // Calculate average ratings
   const averageRating = (field: 'peopleRating' | 'planetRating' | 'transparencyRating') => {
@@ -115,6 +115,18 @@ export default function CompanyPage() {
       if (!company) return;
 
       try {
+        // Fetch company document to get proper name
+        const companySlug = company.toString();
+        const companyDocRef = doc(db, "companies", companySlug);
+        const companyDoc = await getDoc(companyDocRef);
+        
+        if (companyDoc.exists()) {
+          setCompanyName(companyDoc.data().name);
+        } else {
+          // Fallback to decoded slug with hyphens replaced
+          setCompanyName(decodeURIComponent(companySlug).replace(/-/g, " "));
+        }
+
         const q = query(
           collection(db, "posts"),
           where("company", "==", decodeURIComponent(company.toString()))
@@ -167,19 +179,19 @@ export default function CompanyPage() {
   return (
     <main className="bg-gray-50 text-gray-800 min-h-screen">
       {/* Pre-Company Survey Modal */}
-      {showPreSurvey && userId && company && (
+      {showPreSurvey && userId && companyName && (
         <PreCompanySurveyModal
           userId={userId}
-          companyName={decodeURIComponent(company.toString())}
+          companyName={companyName}
           onComplete={() => setShowPreSurvey(false)}
         />
       )}
 
       {/* Post-Company Survey Modal */}
-      {showPostSurvey && userId && company && (
+      {showPostSurvey && userId && companyName && (
         <PostCompanySurveyModal
           userId={userId}
-          companyName={decodeURIComponent(company.toString())}
+          companyName={companyName}
           onComplete={() => setShowPostSurvey(false)}
           onDismiss={() => setShowPostSurvey(false)}
         />
@@ -188,13 +200,7 @@ export default function CompanyPage() {
       <div className="p-8 max-w-6xl mx-auto">
         <div className="flex justify-between items-center mb-8">
           <h1 className="text-2xl font-bold">
-            {(() => {
-              const name = decodeURIComponent(company?.toString() || "");
-              return name
-                .split(" ")
-                .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
-                .join("-");
-            })()}
+            {companyName || "Loading..."}
           </h1>
 
           <Link
