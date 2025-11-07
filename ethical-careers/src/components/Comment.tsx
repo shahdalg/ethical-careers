@@ -1,6 +1,8 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { addComment } from '@/lib/getComments';
 import Button from './Button';
+import { db, auth } from "@/lib/firebase";
+import { doc, updateDoc, arrayUnion, arrayRemove, increment } from "firebase/firestore";
 
 interface CommentProps {
   reviewId: string;
@@ -14,12 +16,62 @@ export interface CommentData {
   text: string;
   createdAt: any;
   userId: string;
+  likes?: number;
+  likedBy?: string[];
 }
 
 export default function Comment({ reviewId, onCommentAdded, comments }: CommentProps) {
   const [newComment, setNewComment] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [localComments, setLocalComments] = useState(comments);
+
+  // Update local comments when props change
+  useEffect(() => {
+    setLocalComments(comments);
+  }, [comments]);
+
+  const handleLikeComment = async (commentId: string, currentLikedBy: string[] = []) => {
+    const currentUser = auth.currentUser;
+    if (!currentUser) {
+      alert('Please sign in to like comments');
+      return;
+    }
+
+    try {
+      const commentRef = doc(db, "comments", commentId);
+      const isLiked = currentLikedBy.includes(currentUser.uid);
+
+      if (isLiked) {
+        // Unlike
+        await updateDoc(commentRef, {
+          likes: increment(-1),
+          likedBy: arrayRemove(currentUser.uid)
+        });
+      } else {
+        // Like
+        await updateDoc(commentRef, {
+          likes: increment(1),
+          likedBy: arrayUnion(currentUser.uid)
+        });
+      }
+
+      // Update local state
+      setLocalComments(prev => prev.map(c => 
+        c.id === commentId 
+          ? {
+              ...c,
+              likes: (c.likes || 0) + (isLiked ? -1 : 1),
+              likedBy: isLiked 
+                ? (c.likedBy || []).filter(id => id !== currentUser.uid)
+                : [...(c.likedBy || []), currentUser.uid]
+            }
+          : c
+      ));
+    } catch (error) {
+      console.error('Error liking comment:', error);
+    }
+  };
 
   const handleSubmitComment = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -60,7 +112,7 @@ export default function Comment({ reviewId, onCommentAdded, comments }: CommentP
     <div className="mt-4 space-y-4">
       {/* Existing Comments */}
       <div className="space-y-2">
-        {comments.map((comment) => (
+        {localComments.map((comment) => (
           <div 
             key={comment.id} 
             className="bg-gray-50 p-3 rounded-lg text-sm"
@@ -77,11 +129,24 @@ export default function Comment({ reviewId, onCommentAdded, comments }: CommentP
                 })}
               </span>
             </div>
-            {comment.userId && (
-              <p className="text-xs text-gray-500 mt-1">
-                User #{comment.userId.slice(0, 6)}
-              </p>
-            )}
+            <div className="flex items-center justify-between mt-2">
+              {comment.userId && (
+                <p className="text-xs text-gray-500">
+                  User #{comment.userId.slice(0, 6)}
+                </p>
+              )}
+              <button
+                onClick={() => handleLikeComment(comment.id, comment.likedBy)}
+                className={`flex items-center gap-1 px-2 py-1 rounded text-xs transition-colors ${
+                  comment.likedBy?.includes(auth.currentUser?.uid || '')
+                    ? 'bg-[#3D348B] text-white'
+                    : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                }`}
+              >
+                <span>👍</span>
+                <span>{comment.likes || 0}</span>
+              </button>
+            </div>
           </div>
         ))}
       </div>

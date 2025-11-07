@@ -8,7 +8,7 @@ import Comment, { CommentData } from "@/components/Comment";
 import PreCompanySurveyModal from "@/components/PreCompanySurveyModal";
 import PostCompanySurveyModal from "@/components/PostCompanySurveyModal";
 import { db, auth } from "@/lib/firebase";
-import { collection, query, where, getDocs, DocumentData, doc, getDoc } from "firebase/firestore";
+import { collection, query, where, getDocs, DocumentData, doc, getDoc, updateDoc, arrayUnion, arrayRemove, increment } from "firebase/firestore";
 import { getUserSurveyData, needsPreSurvey, needsPostSurvey } from "@/lib/surveyHelpers";
 import { onAuthStateChanged } from "firebase/auth";
 
@@ -24,6 +24,8 @@ interface Review {
   recommend: string;
   references: string;
   createdAt: any;
+  likes?: number;
+  likedBy?: string[];
 }
 
 export default function CompanyPage() {
@@ -58,6 +60,48 @@ export default function CompanyPage() {
       }));
     } catch (error) {
       console.error('Error fetching comments:', error);
+    }
+  };
+
+  // Handle like/unlike for reviews
+  const handleLikeReview = async (reviewId: string, currentLikedBy: string[] = []) => {
+    if (!userId) {
+      alert('Please sign in to like reviews');
+      return;
+    }
+
+    try {
+      const reviewRef = doc(db, "posts", reviewId);
+      const isLiked = currentLikedBy.includes(userId);
+
+      if (isLiked) {
+        // Unlike
+        await updateDoc(reviewRef, {
+          likes: increment(-1),
+          likedBy: arrayRemove(userId)
+        });
+      } else {
+        // Like
+        await updateDoc(reviewRef, {
+          likes: increment(1),
+          likedBy: arrayUnion(userId)
+        });
+      }
+
+      // Update local state
+      setReviews(prev => prev.map(r => 
+        r.id === reviewId 
+          ? {
+              ...r,
+              likes: (r.likes || 0) + (isLiked ? -1 : 1),
+              likedBy: isLiked 
+                ? (r.likedBy || []).filter(id => id !== userId)
+                : [...(r.likedBy || []), userId]
+            }
+          : r
+      ));
+    } catch (error) {
+      console.error('Error liking review:', error);
     }
   };
 
@@ -303,6 +347,21 @@ export default function CompanyPage() {
                       <strong>References:</strong> {review.references}
                     </div>
                   )}
+
+                  {/* Like Button */}
+                  <div className="flex items-center gap-2 pt-2">
+                    <button
+                      onClick={() => handleLikeReview(review.id, review.likedBy)}
+                      className={`flex items-center gap-1 px-3 py-1 rounded-lg text-sm transition-colors ${
+                        review.likedBy?.includes(userId || '')
+                          ? 'bg-[#3D348B] text-white'
+                          : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                      }`}
+                    >
+                      <span>👍</span>
+                      <span>{review.likes || 0}</span>
+                    </button>
+                  </div>
 
                   {/* Comments Section */}
                   <div className="mt-4 pt-4 border-t border-gray-100">
