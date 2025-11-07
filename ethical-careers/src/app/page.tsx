@@ -112,9 +112,9 @@ const Home = () => {
         </h3>
         <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-10">
           {[
-            { name: "Solara Energy", field: "Clean Tech", color: "#F7B801" },
-            { name: "General Motors", field: "Automotive", color: "#7678ED" },
-            { name: "EcoChain", field: "Sustainability", color: "#3D348B" },
+            { name: "McKinsey", field: "Consulting", color: "#F7B801", link: "/companies/mckinsey" },
+            { name: "General Motors", field: "Automotive", color: "#7678ED", link: "/companies/general-motors" },
+            { name: "General Dynamics", field: "Aerospace and Defense", color: "#3D348B", link: "/companies/general-dynamics" },
           ].map((company) => (
             <article
               key={company.name}
