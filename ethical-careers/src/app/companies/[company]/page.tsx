@@ -5,8 +5,12 @@ import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 // Navbar is now provided globally in the app layout
 import Comment, { CommentData } from "@/components/Comment";
-import { db } from "@/lib/firebase";
+import PreCompanySurveyModal from "@/components/PreCompanySurveyModal";
+import PostCompanySurveyModal from "@/components/PostCompanySurveyModal";
+import { db, auth } from "@/lib/firebase";
 import { collection, query, where, getDocs, DocumentData } from "firebase/firestore";
+import { getUserSurveyData, needsPreSurvey, needsPostSurvey } from "@/lib/surveyHelpers";
+import { onAuthStateChanged } from "firebase/auth";
 
 interface Review {
   id: string;
@@ -28,6 +32,12 @@ export default function CompanyPage() {
   const [reviews, setReviews] = useState<Review[]>([]);
   const [loading, setLoading] = useState(true);
   const [commentsMap, setCommentsMap] = useState<Record<string, CommentData[]>>({});
+  
+  // Survey state
+  const [userId, setUserId] = useState<string | null>(null);
+  const [showPreSurvey, setShowPreSurvey] = useState(false);
+  const [showPostSurvey, setShowPostSurvey] = useState(false);
+  const [surveyCheckComplete, setSurveyCheckComplete] = useState(false);
 
   const fetchComments = async (reviewId: string) => {
     try {
@@ -49,6 +59,43 @@ export default function CompanyPage() {
       console.error('Error fetching comments:', error);
     }
   };
+
+  // Check survey status on mount
+  useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, async (user) => {
+      if (user && company) {
+        setUserId(user.uid);
+        const companyName = decodeURIComponent(company.toString());
+        
+        console.log('🔍 Checking survey status for:', companyName);
+        
+        // Get user's survey data
+        const surveyData = await getUserSurveyData(user.uid);
+        
+        console.log('📊 Survey data:', surveyData);
+        console.log('📋 Company surveys:', surveyData?.companySurveys);
+        
+        // Check if user needs pre-survey
+        if (needsPreSurvey(surveyData, companyName)) {
+          console.log('❌ Pre-survey needed for:', companyName);
+          setShowPreSurvey(true);
+        } else {
+          console.log('✅ Pre-survey already completed for:', companyName);
+          // Check if user needs post-survey (7 days after first visit)
+          if (needsPostSurvey(surveyData, companyName)) {
+            console.log('📅 Post-survey needed for:', companyName);
+            setShowPostSurvey(true);
+          }
+        }
+        
+        setSurveyCheckComplete(true);
+      } else {
+        setSurveyCheckComplete(true);
+      }
+    });
+
+    return () => unsubscribe();
+  }, [company]);
 
   // Calculate average ratings
   const averageRating = (field: 'peopleRating' | 'planetRating' | 'transparencyRating') => {
@@ -109,7 +156,7 @@ export default function CompanyPage() {
     </div>
   );
 
-  if (loading) {
+  if (loading || !surveyCheckComplete) {
     return (
       <main className="bg-gray-50 text-gray-800 min-h-screen">
         <div className="p-8">Loading...</div>
@@ -119,6 +166,24 @@ export default function CompanyPage() {
 
   return (
     <main className="bg-gray-50 text-gray-800 min-h-screen">
+      {/* Pre-Company Survey Modal */}
+      {showPreSurvey && userId && company && (
+        <PreCompanySurveyModal
+          userId={userId}
+          companyName={decodeURIComponent(company.toString())}
+          onComplete={() => setShowPreSurvey(false)}
+        />
+      )}
+
+      {/* Post-Company Survey Modal */}
+      {showPostSurvey && userId && company && (
+        <PostCompanySurveyModal
+          userId={userId}
+          companyName={decodeURIComponent(company.toString())}
+          onComplete={() => setShowPostSurvey(false)}
+          onDismiss={() => setShowPostSurvey(false)}
+        />
+      )}
 
       <div className="p-8 max-w-6xl mx-auto">
         <div className="flex justify-between items-center mb-8">

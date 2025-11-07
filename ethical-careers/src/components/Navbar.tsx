@@ -1,12 +1,43 @@
 "use client";
 
+import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { signOut } from "firebase/auth";
 import { auth } from "@/lib/firebase";
 import { useUser } from "@/lib/useUser";
 
 export default function Navbar() {
+  const router = useRouter();
   const { user, loading } = useUser();
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  const dropdownRef = useRef<HTMLDivElement>(null);
+
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+        setIsDropdownOpen(false);
+      }
+    };
+
+    if (isDropdownOpen) {
+      document.addEventListener("mousedown", handleClickOutside);
+    }
+
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, [isDropdownOpen]);
+
+  const handleLogout = async () => {
+    try {
+      await signOut(auth);
+      router.push("/"); // Redirect to landing page
+    } catch (error) {
+      console.error("Error signing out:", error);
+    }
+  };
 
   const initials = (() => {
     const e = user?.email ?? "";
@@ -26,10 +57,10 @@ export default function Navbar() {
         </div>
 
         <nav className="hidden md:flex gap-8 text-sm items-center">
-          <Link href="/#companies" className="hover:text-[#3D348B] transition">Companies</Link>
-          <Link href="/#rankings" className="hover:text-[#3D348B] transition">Rankings</Link>
-          <Link href="/#how" className="hover:text-[#3D348B] transition">How it works</Link>
-          <Link href="/#contact" className="hover:text-[#3D348B] transition">Contact</Link>
+          <Link href="/#companies" className="text-gray-700 hover:text-[#3D348B] transition font-medium">Companies</Link>
+          <Link href="/#rankings" className="text-gray-700 hover:text-[#3D348B] transition font-medium">Rankings</Link>
+          <Link href="/#how" className="text-gray-700 hover:text-[#3D348B] transition font-medium">How it works</Link>
+          <Link href="/#contact" className="text-gray-700 hover:text-[#3D348B] transition font-medium">Contact</Link>
 
           {/* Auth controls */}
           {!loading && !user && (
@@ -42,28 +73,35 @@ export default function Navbar() {
           )}
 
           {!loading && user && (
-            <div className="relative group">
+            <div className="relative" ref={dropdownRef}>
               <button
                 title={user.email ?? "Profile"}
+                onClick={() => setIsDropdownOpen(!isDropdownOpen)}
                 className="flex items-center justify-center w-9 h-9 rounded-full bg-[#3D348B] text-white font-semibold shadow hover:opacity-90 transition"
               >
                 {initials}
               </button>
 
-              <div className="absolute right-0 mt-2 w-40 rounded-lg border border-gray-200 bg-white shadow-lg opacity-0 scale-95 group-hover:opacity-100 group-hover:scale-100 transition-all duration-200">
-                <Link
-                  href="/profile"
-                  className="block px-4 py-2 text-gray-700 hover:bg-gray-50 rounded-t-lg"
-                >
-                  Profile
-                </Link>
-                <button
-                  onClick={() => signOut(auth)}
-                  className="w-full text-left px-4 py-2 text-[#3D348B] hover:bg-[#3D348B]/10 rounded-b-lg"
-                >
-                  Logout
-                </button>
-              </div>
+              {isDropdownOpen && (
+                <div className="absolute right-0 mt-1 w-40 rounded-lg border border-gray-200 bg-white shadow-lg">
+                  <Link
+                    href="/profile"
+                    onClick={() => setIsDropdownOpen(false)}
+                    className="block px-4 py-2 text-gray-700 hover:bg-gray-50 rounded-t-lg"
+                  >
+                    Profile
+                  </Link>
+                  <button
+                    onClick={() => {
+                      setIsDropdownOpen(false);
+                      handleLogout();
+                    }}
+                    className="w-full text-left px-4 py-2 text-[#3D348B] hover:bg-[#3D348B]/10 rounded-b-lg"
+                  >
+                    Logout
+                  </button>
+                </div>
+              )}
             </div>
           )}
         </nav>

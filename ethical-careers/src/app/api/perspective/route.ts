@@ -12,18 +12,45 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // TEMPORARY: Bypass moderation for debugging
+    // Remove this block once you've confirmed the API is working
+    const BYPASS_MODERATION = false; // Set to true to disable moderation temporarily
+    if (BYPASS_MODERATION) {
+      return NextResponse.json({
+        allowed: true,
+        scores: {},
+        message: 'Content approved (moderation bypassed)',
+      });
+    }
+
     // Call Perspective API
-    const result = await analyzeTextWithPerspective(text);
+    const { result, isAcceptable } = await analyzeTextWithPerspective(text);
 
     if (!result) {
-      return NextResponse.json(
-        { error: 'Failed to analyze text with Perspective API' },
-        { status: 500 }
-      );
+      console.error('Perspective API returned null result');
+      // Fail open - allow content if API fails
+      return NextResponse.json({
+        allowed: true,
+        scores: {},
+        message: 'Content approved (moderation service unavailable)',
+      });
     }
+
+    console.log('Perspective API result:', JSON.stringify(result, null, 2));
 
     // Extract scores
     const scores = result.attributeScores;
+    
+    if (!scores) {
+      console.error('No attributeScores in result');
+      // If we can't get scores, allow the content (fail open)
+      return NextResponse.json({
+        allowed: true,
+        scores: {},
+        message: 'Content approved (moderation unavailable)',
+      });
+    }
+
     const toxicity = scores?.TOXICITY?.summaryScore?.value ?? 0;
     const severeToxicity = scores?.SEVERE_TOXICITY?.summaryScore?.value ?? 0;
     const identityAttack = scores?.IDENTITY_ATTACK?.summaryScore?.value ?? 0;
@@ -31,15 +58,18 @@ export async function POST(request: NextRequest) {
     const profanity = scores?.PROFANITY?.summaryScore?.value ?? 0;
     const threat = scores?.THREAT?.summaryScore?.value ?? 0;
 
-    // Determine if content should be blocked (threshold: 0.7 = 70%)
-    const threshold = 0.7;
-    const isBlocked =
-      toxicity > threshold ||
-      severeToxicity > threshold ||
-      identityAttack > threshold ||
-      insult > threshold ||
-      profanity > threshold ||
-      threat > threshold;
+    console.log('Extracted scores:', {
+      toxicity,
+      severeToxicity,
+      identityAttack,
+      insult,
+      profanity,
+      threat,
+    });
+
+    // Use the isAcceptable flag from the Perspective helper
+    // (which already checks thresholds defined in perspective.ts)
+    const isBlocked = !isAcceptable;
 
     return NextResponse.json({
       allowed: !isBlocked,

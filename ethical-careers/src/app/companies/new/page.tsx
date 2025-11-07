@@ -3,6 +3,8 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { addCompany } from "@/lib/addCompany";
+import { auth, db } from "@/lib/firebase";
+import { doc, setDoc, getDoc, serverTimestamp } from "firebase/firestore";
 
 export default function NewCompanyPage() {
   const router = useRouter();
@@ -23,8 +25,33 @@ export default function NewCompanyPage() {
       // Add to Firestore
       const slug = await addCompany(name, description, industry);
 
+      // Mark the pre-survey as completed for this company since user is creating it
+      const user = auth.currentUser;
+      if (user) {
+        const userDocRef = doc(db, "users", user.uid);
+        const userDoc = await getDoc(userDocRef);
+        const currentData = userDoc.exists() ? userDoc.data() : {};
+        
+        const companySurveys = currentData.companySurveys || {};
+        companySurveys[name] = {
+          preSubmitted: true,
+          postSubmitted: false,
+          firstVisitDate: new Date().toISOString(),
+        };
+
+        await setDoc(
+          userDocRef,
+          {
+            companySurveys,
+            firstCompanyVisitDate: currentData.firstCompanyVisitDate || serverTimestamp(),
+            updatedAt: serverTimestamp(),
+          },
+          { merge: true }
+        );
+      }
+
       alert("Company added successfully!");
-      // Redirect user to that company’s review page
+      // Redirect user to that company's review page
       router.push(`/companies/${slug}/review`);
     } catch (error) {
       console.error("Error adding company:", error);

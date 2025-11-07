@@ -1,21 +1,14 @@
-// perspective.ts
-
 /**
- * Retrieves the Perspective API key from environment variables.
- * This is a SERVER-ONLY variable in Next.js (no NEXT_PUBLIC_ prefix).
- * Never import this file directly in client components.
+ * perspective.ts — with built-in moderation thresholds
+ * -----------------------------------------------
+ * This version adds a toxicity threshold check and returns both
+ * the raw API scores and a boolean `isAcceptable` flag.
  */
+
 const PERSPECTIVE_API_KEY: string | undefined = process.env.PERSPECTIVE_API_KEY;
 
-/**
- * Defines the structure for the Perspective API request body.
- * You can add more attributes as needed based on your analysis requirements.
- * See: https://developers.perspectiveapi.com/s/about-the-api-attributes
- */
 interface PerspectiveRequest {
-  comment: {
-    text: string;
-  };
+  comment: { text: string };
   requestedAttributes: {
     TOXICITY?: {};
     SEVERE_TOXICITY?: {};
@@ -23,48 +16,41 @@ interface PerspectiveRequest {
     INSULT?: {};
     PROFANITY?: {};
     THREAT?: {};
-    SEXUALLY_EXPLICIT?: {};
-    FLIRTATION?: {}; // Note: FLIRTATION is a non-default attribute and may require specific access.
-    // Add any other attributes you need to analyze
   };
-  // You can also add more fields like languages, doNotStore, etc.
-  // See: https://developers.perspectiveapi.com/s/docs
 }
 
-/**
- * Defines the structure for the Perspective API response.
- * This is a simplified version; the actual response can be more complex.
- */
+interface AttributeScore {
+  summaryScore: {
+    value: number;
+    type: string;
+  };
+}
+
 interface PerspectiveResponse {
   attributeScores: {
-    [attribute: string]: {
-      summaryScore: {
-        value: number; // Score between 0 and 1
-        type: string; // e.g., "PROBABILITY"
-      };
-    };
+    [attribute: string]: AttributeScore;
   };
-  // Other potential fields like languages, detectedLanguages, etc.
 }
 
 /**
- * Calls the Perspective API to analyze the given text.
- * @param text The text to be analyzed for various attributes.
- * @returns A Promise that resolves to the Perspective API response or null if an error occurs.
+ * Calls the Perspective API and returns both the response and
+ * a boolean indicating if the text passes moderation.
  */
-export async function analyzeTextWithPerspective(text: string): Promise<PerspectiveResponse | null> {
+export async function analyzeTextWithPerspective(
+  text: string
+): Promise<{
+  result: PerspectiveResponse | null;
+  isAcceptable: boolean;
+}> {
   if (!PERSPECTIVE_API_KEY) {
-    console.error("Perspective API Key is not configured. Please set REACT_APP_PERSPECTIVE_API_KEY in your .env file.");
-    // In a production environment, you might want to throw an error or handle this more gracefully.
-    return null;
+    console.error("❌ Missing Perspective API Key in environment variables.");
+    return { result: null, isAcceptable: true }; // fail open — don't block everything
   }
 
-  // Define the attributes you want to request.
-  // You can customize this based on what you're interested in.
+  const API_ENDPOINT = `https://commentanalyzer.googleapis.com/v1alpha1/comments:analyze?key=${PERSPECTIVE_API_KEY}`;
+
   const requestBody: PerspectiveRequest = {
-    comment: {
-      text: text,
-    },
+    comment: { text },
     requestedAttributes: {
       TOXICITY: {},
       SEVERE_TOXICITY: {},
@@ -72,93 +58,57 @@ export async function analyzeTextWithPerspective(text: string): Promise<Perspect
       INSULT: {},
       PROFANITY: {},
       THREAT: {},
-      // Include other attributes you specifically need
-      // For example: FLIRTATION: {} if you have access and need it
     },
-    // Set doNotStore: true if you want to prevent Google from storing the analyzed text
-    // doNotStore: true,
   };
-
-  const API_ENDPOINT = `https://commentanalyzer.googleapis.com/v1alpha1/comments:analyze?key=${PERSPECTIVE_API_KEY}`;
 
   try {
     const response = await fetch(API_ENDPOINT, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
       body: JSON.stringify(requestBody),
     });
 
     if (!response.ok) {
-      const errorDetail = await response.json();
-      console.error(`Perspective API request failed with status ${response.status}:`, errorDetail);
-      // You might want to throw an error here to propagate it to the caller
-      throw new Error(`Perspective API error: ${errorDetail.error?.message || response.statusText}`);
+      const err = await response.json();
+      console.error("❌ Perspective API failed:", err);
+      return { result: null, isAcceptable: true }; // don't block due to API failure
     }
 
     const data: PerspectiveResponse = await response.json();
-    return data;
 
+    // Extract attribute values safely
+    const getScore = (attr: string) =>
+      data.attributeScores?.[attr]?.summaryScore?.value ?? 0;
+
+    const scores = {
+      TOXICITY: getScore("TOXICITY"),
+      SEVERE_TOXICITY: getScore("SEVERE_TOXICITY"),
+      IDENTITY_ATTACK: getScore("IDENTITY_ATTACK"),
+      INSULT: getScore("INSULT"),
+      PROFANITY: getScore("PROFANITY"),
+      THREAT: getScore("THREAT"),
+    };
+
+    // ✅ Define thresholds
+    const THRESHOLDS = {
+      TOXICITY: 0.8,
+      SEVERE_TOXICITY: 0.7,
+      IDENTITY_ATTACK: 0.7,
+      INSULT: 0.8,
+      PROFANITY: 0.8,
+      THREAT: 0.7,
+    };
+
+    // 🚦 Determine if text is acceptable
+    const isAcceptable = Object.entries(scores).every(
+      ([attr, score]) => score < (THRESHOLDS as any)[attr]
+    );
+
+    console.log("Perspective Scores:", scores, "✅ Acceptable:", isAcceptable);
+
+    return { result: data, isAcceptable };
   } catch (error) {
-    console.error("Error calling Perspective API:", error);
-    return null;
+    console.error("❌ Error calling Perspective API:", error);
+    return { result: null, isAcceptable: true }; // fail open
   }
 }
-
-// Example of how you might use it (can be placed in a component file or another service)
-/*
-// In a React component:
-import React, { useState } from 'react';
-import { analyzeTextWithPerspective } from './perspective'; // Adjust path as needed
-
-const CommentAnalyzer: React.FC = () => {
-  const [comment, setComment] = useState('');
-  const [analysisResult, setAnalysisResult] = useState<any>(null); // Use a more specific type if desired
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-
-  const handleAnalyze = async () => {
-    setLoading(true);
-    setError(null);
-    setAnalysisResult(null);
-    try {
-      const result = await analyzeTextWithPerspective(comment);
-      setAnalysisResult(result);
-    } catch (err: any) {
-      setError(err.message || "Failed to analyze comment.");
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  return (
-    <div>
-      <textarea
-        value={comment}
-        onChange={(e) => setComment(e.target.value)}
-        placeholder="Enter comment to analyze..."
-        rows={4}
-        cols={50}
-      />
-      <button onClick={handleAnalyze} disabled={loading || !comment}>
-        {loading ? 'Analyzing...' : 'Analyze Comment'}
-      </button>
-
-      {error && <p style={{ color: 'red' }}>Error: {error}</p>}
-      {analysisResult && (
-        <div>
-          <h3>Analysis Results:</h3>
-          {Object.entries(analysisResult.attributeScores).map(([attr, scoreInfo]) => (
-            <p key={attr}>
-              <strong>{attr}:</strong> {(scoreInfo.summaryScore.value * 100).toFixed(2)}%
-            </p>
-          ))}
-        </div>
-      )}
-    </div>
-  );
-};
-
-export default CommentAnalyzer;
-*/

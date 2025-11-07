@@ -86,6 +86,9 @@ export default function SignupPage() {
         photoURL: user.photoURL || "",
         createdAt: serverTimestamp(),
         updatedAt: serverTimestamp(),
+        submittedInitialSurvey: false, // Will be set to true after survey completion
+        companySurveys: {}, // Map of companyId -> {preSubmitted, postSubmitted, firstVisitDate}
+        firstCompanyVisitDate: null, // Date when user first visited any company page
       });
 
       // move to survey step
@@ -132,6 +135,16 @@ export default function SignupPage() {
           ethicsAffectChoices: Number(q5),
           lookedUpEthicsLast12mo: q6, // "yes" | "no" | "na"
           submittedAt: serverTimestamp(),
+        },
+        { merge: true }
+      );
+
+      // Mark initial survey as completed in user profile
+      await setDoc(
+        doc(db, "users", newUserId),
+        {
+          submittedInitialSurvey: true,
+          updatedAt: serverTimestamp(),
         },
         { merge: true }
       );
