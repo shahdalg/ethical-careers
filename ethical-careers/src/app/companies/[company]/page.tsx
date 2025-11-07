@@ -6,10 +6,9 @@ import Link from 'next/link';
 // Navbar is now provided globally in the app layout
 import Comment, { CommentData } from "@/components/Comment";
 import PreCompanySurveyModal from "@/components/PreCompanySurveyModal";
-import PostCompanySurveyModal from "@/components/PostCompanySurveyModal";
 import { db, auth } from "@/lib/firebase";
 import { collection, query, where, getDocs, DocumentData, doc, getDoc, updateDoc, arrayUnion, arrayRemove, increment } from "firebase/firestore";
-import { getUserSurveyData, needsPreSurvey, needsPostSurvey } from "@/lib/surveyHelpers";
+import { getUserSurveyData, needsPreSurvey } from "@/lib/surveyHelpers";
 import { onAuthStateChanged } from "firebase/auth";
 
 interface Review {
@@ -39,7 +38,6 @@ export default function CompanyPage() {
   // Survey state
   const [userId, setUserId] = useState<string | null>(null);
   const [showPreSurvey, setShowPreSurvey] = useState(false);
-  const [showPostSurvey, setShowPostSurvey] = useState(false);
   const [surveyCheckComplete, setSurveyCheckComplete] = useState(false);
 
   const fetchComments = async (reviewId: string) => {
@@ -125,11 +123,6 @@ export default function CompanyPage() {
           setShowPreSurvey(true);
         } else {
           console.log('✅ Pre-survey already completed for:', companyName);
-          // Check if user needs post-survey (7 days after first visit)
-          if (needsPostSurvey(surveyData, companyName)) {
-            console.log('📅 Post-survey needed for:', companyName);
-            setShowPostSurvey(true);
-          }
         }
         
         setSurveyCheckComplete(true);
@@ -164,23 +157,39 @@ export default function CompanyPage() {
         const companyDocRef = doc(db, "companies", companySlug);
         const companyDoc = await getDoc(companyDocRef);
         
+        let resolvedName = "";
         if (companyDoc.exists()) {
-          setCompanyName(companyDoc.data().name);
+          resolvedName = companyDoc.data().name as string;
+          setCompanyName(resolvedName);
         } else {
           // Fallback to decoded slug with hyphens replaced
-          setCompanyName(decodeURIComponent(companySlug).replace(/-/g, " "));
+          resolvedName = decodeURIComponent(companySlug).replace(/-/g, " ");
+          setCompanyName(resolvedName);
         }
 
-        const q = query(
-          collection(db, "posts"),
-          where("company", "==", decodeURIComponent(company.toString()))
-        );
+        // Collect candidates for legacy records (some saved slug into 'company', some saved name)
+        const candidates = Array.from(new Set([
+          resolvedName,
+          decodeURIComponent(companySlug),
+          decodeURIComponent(companySlug).replace(/-/g, " ")
+        ].filter(Boolean)));
 
-        const querySnapshot = await getDocs(q);
-        const reviewsData = querySnapshot.docs.map(doc => ({
-          id: doc.id,
-          ...doc.data()
-        })) as Review[];
+        // Query by new schema (companySlug) and legacy (company in candidates)
+        const postsCol = collection(db, "posts");
+        const qSlug = query(postsCol, where("companySlug", "==", companySlug));
+        const qLegacy = query(postsCol, where("company", "in", candidates));
+
+        const [snapSlug, snapLegacy] = await Promise.all([
+          getDocs(qSlug),
+          getDocs(qLegacy)
+        ]);
+
+        // Merge unique docs by id
+        const byId = new Map<string, any>();
+        snapSlug.forEach(d => byId.set(d.id, { id: d.id, ...d.data() }));
+        snapLegacy.forEach(d => byId.set(d.id, { id: d.id, ...d.data() }));
+
+        const reviewsData = Array.from(byId.values()) as Review[];
 
         setReviews(reviewsData);
         // Fetch comments for each review
@@ -231,15 +240,7 @@ export default function CompanyPage() {
         />
       )}
 
-      {/* Post-Company Survey Modal */}
-      {showPostSurvey && userId && companyName && (
-        <PostCompanySurveyModal
-          userId={userId}
-          companyName={companyName}
-          onComplete={() => setShowPostSurvey(false)}
-          onDismiss={() => setShowPostSurvey(false)}
-        />
-      )}
+      {/* Post survey now handled globally on home page */}
 
       <div className="p-8 max-w-6xl mx-auto">
         <div className="flex justify-between items-center mb-8">

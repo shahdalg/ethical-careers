@@ -2,13 +2,16 @@
 
 import { useState, useEffect } from "react";
 import { useParams, useRouter } from "next/navigation";
-import { db } from "@/lib/firebase"; // adjust path if needed
+import { db, auth } from "@/lib/firebase"; // adjust path if needed
 import { collection, addDoc, Timestamp, doc, getDoc } from "firebase/firestore";
+import { onAuthStateChanged } from "firebase/auth";
 
 export default function CompanyReviewForm() {
   const router = useRouter();
   const { company } = useParams(); // dynamic URL param (e.g. /companies/google/review)
   const [companyName, setCompanyName] = useState<string>("");
+  const [userId, setUserId] = useState<string | null>(null);
+  const [userEmail, setUserEmail] = useState<string | null>(null);
 
   // Self Identify 4
   const [selfIdentify, setSelfIdentify] = useState("");
@@ -57,6 +60,20 @@ export default function CompanyReviewForm() {
     fetchCompanyName();
   }, [company]);
 
+  // Get current user
+  useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, (user) => {
+      if (user) {
+        setUserId(user.uid);
+        setUserEmail(user.email);
+      } else {
+        // Redirect to login if not authenticated
+        router.push("/login");
+      }
+    });
+    return () => unsubscribe();
+  }, [router]);
+
   // Helper function to check text with Perspective API
   const checkTextModeration = async (text: string): Promise<boolean> => {
     try {
@@ -85,6 +102,7 @@ export default function CompanyReviewForm() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!company) return alert("Invalid company URL");
+    if (!userId) return alert("You must be logged in to submit a review");
 
     setError(null);
 
@@ -108,6 +126,13 @@ export default function CompanyReviewForm() {
 
       // If all checks pass, submit the review
       await addDoc(collection(db, "posts"), {
+        // User information
+        authorId: userId,
+        authorEmail: userEmail,
+        // Store both slug and name for robust querying
+        companyName: companyName,
+        companySlug: company?.toString() || "",
+        // Keep legacy field for backward compatibility
         company: companyName,
         selfIdentify,
         peopleText,

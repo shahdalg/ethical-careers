@@ -4,6 +4,8 @@ import { onAuthStateChanged, User } from "firebase/auth";
 import { auth } from "@/lib/firebase";
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+import GlobalPostSurveyModal from '@/components/GlobalPostSurveyModal';
+import { getUserSurveyData, needsGlobalPostSurvey } from '@/lib/surveyHelpers';
 
 const Home = () => {
   const revealRefs = useRef<Array<HTMLElement | null>>([]);
@@ -18,6 +20,21 @@ const Home = () => {
 
   // router for client-side navigation
   const router = useRouter();
+  const [showGlobalPost, setShowGlobalPost] = useState(false);
+  const [userId, setUserId] = useState<string | null>(null);
+
+  // Check global post-survey on load
+  useEffect(() => {
+    const unsub = onAuthStateChanged(auth, async (u) => {
+      if (!u) return;
+      setUserId(u.uid);
+      const surveyData = await getUserSurveyData(u.uid);
+      if (needsGlobalPostSurvey(surveyData)) {
+        setShowGlobalPost(true);
+      }
+    });
+    return () => unsub();
+  }, []);
 
   useEffect(() => {
     const io = new IntersectionObserver(
@@ -38,6 +55,13 @@ const Home = () => {
 
   return (
     <main className="flex flex-col min-h-screen bg-gray-50 text-gray-800 font-jakarta">
+      {showGlobalPost && userId && (
+        <GlobalPostSurveyModal
+          userId={userId}
+          onComplete={() => setShowGlobalPost(false)}
+          onDismiss={() => setShowGlobalPost(false)}
+        />
+      )}
   {/* Navbar is provided globally in the layout — no local Navbar here to avoid duplicates */}
 
 

@@ -16,6 +16,8 @@ export interface CommentData {
   text: string;
   createdAt: any;
   userId: string;
+  authorId?: string;
+  authorEmail?: string;
   likes?: number;
   likedBy?: string[];
 }

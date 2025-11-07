@@ -11,6 +11,7 @@ export interface UserSurveyData {
   submittedInitialSurvey: boolean;
   companySurveys: Record<string, CompanySurveyStatus>;
   firstCompanyVisitDate: any;
+  submittedGlobalPostSurvey?: boolean;
 }
 
 /**
@@ -26,6 +27,7 @@ export async function getUserSurveyData(userId: string): Promise<UserSurveyData 
       submittedInitialSurvey: data.submittedInitialSurvey || false,
       companySurveys: data.companySurveys || {},
       firstCompanyVisitDate: data.firstCompanyVisitDate || null,
+      submittedGlobalPostSurvey: data.submittedGlobalPostSurvey || false,
     };
   } catch (error) {
     console.error("Error fetching user survey data:", error);
@@ -47,47 +49,19 @@ export function needsPreSurvey(
 }
 
 /**
- * Check if user should be prompted for post-survey
- * (7 days after first visit and hasn't submitted post-survey yet)
+ * Global post-survey logic: trigger once after firstCompanyVisitDate passes threshold
+ * and user hasn't submitted the global post-survey.
  */
-export function needsPostSurvey(
-  surveyData: UserSurveyData | null,
-  companyName: string
+export function needsGlobalPostSurvey(
+  surveyData: UserSurveyData | null
 ): boolean {
   if (!surveyData) return false;
+  if (surveyData.submittedGlobalPostSurvey) return false;
+  if (!surveyData.firstCompanyVisitDate) return false;
 
-  const companySurvey = surveyData.companySurveys[companyName];
-  if (!companySurvey) return false;
-
-  // Must have submitted pre-survey
-  if (!companySurvey.preSubmitted) return false;
-
-  // Must not have already submitted post-survey
-  if (companySurvey.postSubmitted) return false;
-
-  // Check if 0.5 days (12 hours) have passed
-  const firstVisit = new Date(companySurvey.firstVisitDate);
+  const firstVisit = new Date(surveyData.firstCompanyVisitDate);
   const now = new Date();
   const daysSince = (now.getTime() - firstVisit.getTime()) / (1000 * 60 * 60 * 24);
-
-  return daysSince >= 0.5;
+  return daysSince >= 0.001; // ~1.44 minutes for rapid testing (adjust to 7 for prod)
 }
-
-/**
- * Get list of companies that need post-survey
- */
-export function getCompaniesNeedingPostSurvey(
-  surveyData: UserSurveyData | null
-): string[] {
-  if (!surveyData || !surveyData.companySurveys) return [];
-
-  const companiesNeedingPostSurvey: string[] = [];
-
-  for (const [companyName, surveyStatus] of Object.entries(surveyData.companySurveys)) {
-    if (needsPostSurvey(surveyData, companyName)) {
-      companiesNeedingPostSurvey.push(companyName);
-    }
-  }
-
-  return companiesNeedingPostSurvey;
-}
+ 

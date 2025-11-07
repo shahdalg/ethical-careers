@@ -88,8 +88,7 @@ export default function PreCompanySurveyModal({
             Before You View: {companyName}
           </h2>
           <p className="text-sm text-gray-600 mt-2">
-            Please answer these quick questions about your current perception. This
-            helps us understand how perspectives change.
+            Please take a moment to answer the following two questions about this company. The information you provide will be used solely for internal data collection purposes and will not be shared externally.
           </p>
         </div>
 
