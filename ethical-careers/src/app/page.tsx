@@ -3,6 +3,7 @@ import { useEffect, useRef, useState } from "react";
 import { onAuthStateChanged, User } from "firebase/auth";
 import { auth } from "@/lib/firebase";
 import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 
 const Home = () => {
   const revealRefs = useRef<Array<HTMLElement | null>>([]);
@@ -112,24 +113,27 @@ const Home = () => {
         </h3>
         <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-10">
           {[
-            { name: "McKinsey", field: "Consulting", color: "#F7B801", link: "/companies/mckinsey" },
+            { name: "McKinsey & Company", field: "Consulting", color: "#F7B801", link: "/companies/mckinsey" },
             { name: "General Motors", field: "Automotive", color: "#7678ED", link: "/companies/general-motors" },
             { name: "General Dynamics", field: "Aerospace and Defense", color: "#3D348B", link: "/companies/general-dynamics" },
           ].map((company) => (
-            <article
+            <Link
               key={company.name}
-              className="bg-white p-6 rounded-2xl shadow-md hover:shadow-xl transition-all hover:-translate-y-1"
+              href={company.link}
+              className="block"
             >
-              <div
-                className="h-12 w-12 rounded-full mb-4"
-                style={{ backgroundColor: company.color }}
-              />
-              <h4 className="text-xl font-semibold text-gray-800 mb-1">{company.name}</h4>
-              <p className="text-gray-600">{company.field}</p>
-              <div className="mt-4 inline-flex items-center gap-2 text-sm text-[#3D348B]">
-                Explore <span className="transition group-hover:translate-x-1">→</span>
-              </div>
-            </article>
+              <article className="bg-white p-6 rounded-2xl shadow-md hover:shadow-xl transition-all hover:-translate-y-1 cursor-pointer h-full">
+                <div
+                  className="h-12 w-12 rounded-full mb-4"
+                  style={{ backgroundColor: company.color }}
+                />
+                <h4 className="text-xl font-semibold text-gray-800 mb-1">{company.name}</h4>
+                <p className="text-gray-600">{company.field}</p>
+                <div className="mt-4 inline-flex items-center gap-2 text-sm text-[#3D348B]">
+                  Explore <span className="transition group-hover:translate-x-1">→</span>
+                </div>
+              </article>
+            </Link>
           ))}
         </div>
       </section>
