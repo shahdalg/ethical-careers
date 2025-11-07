@@ -12,6 +12,7 @@ export default function CompanyReviewForm() {
   const [companyName, setCompanyName] = useState<string>("");
   const [userId, setUserId] = useState<string | null>(null);
   const [userEmail, setUserEmail] = useState<string | null>(null);
+  const [userPseudonym, setUserPseudonym] = useState<string | null>(null);
 
   // Self Identify 4
   const [selfIdentify, setSelfIdentify] = useState("");
@@ -62,10 +63,21 @@ export default function CompanyReviewForm() {
 
   // Get current user
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (user) => {
+    const unsubscribe = onAuthStateChanged(auth, async (user) => {
       if (user) {
         setUserId(user.uid);
         setUserEmail(user.email);
+        
+        // Fetch pseudonym from Firestore
+        try {
+          const userDocRef = doc(db, "users", user.uid);
+          const userDoc = await getDoc(userDocRef);
+          if (userDoc.exists()) {
+            setUserPseudonym(userDoc.data().pseudonym || null);
+          }
+        } catch (error) {
+          console.error("Error fetching pseudonym:", error);
+        }
       } else {
         // Redirect to login if not authenticated
         router.push("/login");
@@ -129,6 +141,7 @@ export default function CompanyReviewForm() {
         // User information
         authorId: userId,
         authorEmail: userEmail,
+        pseudonym: userPseudonym,
         // Store both slug and name for robust querying
         companyName: companyName,
         companySlug: company?.toString() || "",

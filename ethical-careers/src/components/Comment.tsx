@@ -1,8 +1,9 @@
 import { useState, useEffect } from 'react';
+import Link from 'next/link';
 import { addComment } from '@/lib/getComments';
 import Button from './Button';
 import { db, auth } from "@/lib/firebase";
-import { doc, updateDoc, arrayUnion, arrayRemove, increment } from "firebase/firestore";
+import { doc, updateDoc, arrayUnion, arrayRemove, increment, getDoc } from "firebase/firestore";
 
 interface CommentProps {
   reviewId: string;
@@ -27,10 +28,43 @@ export default function Comment({ reviewId, onCommentAdded, comments }: CommentP
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [localComments, setLocalComments] = useState(comments);
+  const [pseudonymMap, setPseudonymMap] = useState<Record<string, string>>({}); // cache pseudonyms
 
   // Update local comments when props change
   useEffect(() => {
     setLocalComments(comments);
+  }, [comments]);
+
+  // 🔹 Fetch pseudonyms for comment authors
+  useEffect(() => {
+    const fetchPseudonyms = async () => {
+      const missingUserIds = comments
+        .map((c) => c.userId)
+        .filter((id) => id && !pseudonymMap[id]);
+
+      if (missingUserIds.length === 0) return;
+
+      const newMap: Record<string, string> = {};
+      await Promise.all(
+        missingUserIds.map(async (uid) => {
+          try {
+            const userDoc = await getDoc(doc(db, "users", uid));
+            if (userDoc.exists()) {
+              const data = userDoc.data();
+              newMap[uid] = data.pseudonym || "AnonymousUser";
+            } else {
+              newMap[uid] = "AnonymousUser";
+            }
+          } catch {
+            newMap[uid] = "AnonymousUser";
+          }
+        })
+      );
+
+      setPseudonymMap((prev) => ({ ...prev, ...newMap }));
+    };
+
+    fetchPseudonyms();
   }, [comments]);
 
   const handleLikeComment = async (commentId: string, currentLikedBy: string[] = []) => {
@@ -45,20 +79,17 @@ export default function Comment({ reviewId, onCommentAdded, comments }: CommentP
       const isLiked = currentLikedBy.includes(currentUser.uid);
 
       if (isLiked) {
-        // Unlike
         await updateDoc(commentRef, {
           likes: increment(-1),
           likedBy: arrayRemove(currentUser.uid)
         });
       } else {
-        // Like
         await updateDoc(commentRef, {
           likes: increment(1),
           likedBy: arrayUnion(currentUser.uid)
         });
       }
 
-      // Update local state
       setLocalComments(prev => prev.map(c => 
         c.id === commentId 
           ? {
@@ -120,7 +151,16 @@ export default function Comment({ reviewId, onCommentAdded, comments }: CommentP
             className="bg-gray-50 p-3 rounded-lg text-sm"
           >
             <div className="flex justify-between items-start">
-              <p className="text-gray-700">{comment.text}</p>
+              <div>
+                {/* 👇 pseudonym now links to profile */}
+                <Link
+                  href={`/user/${comment.userId}`}
+                  className="font-semibold text-[#3D348B] hover:underline"
+                >
+                  {pseudonymMap[comment.userId] || "AnonymousUser"}
+                </Link>
+                <p className="text-gray-700 mt-1">{comment.text}</p>
+              </div>
               <span className="text-xs text-gray-500">
                 {comment.createdAt?.toDate().toLocaleString('en-US', {
                   year: 'numeric',
@@ -131,12 +171,8 @@ export default function Comment({ reviewId, onCommentAdded, comments }: CommentP
                 })}
               </span>
             </div>
+
             <div className="flex items-center justify-between mt-2">
-              {comment.userId && (
-                <p className="text-xs text-gray-500">
-                  User #{comment.userId.slice(0, 6)}
-                </p>
-              )}
               <button
                 onClick={() => handleLikeComment(comment.id, comment.likedBy)}
                 className={`flex items-center gap-1 px-2 py-1 rounded text-xs transition-colors ${
