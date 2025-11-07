@@ -1,11 +1,10 @@
 "use client"; // 👈 must be the very first line
 import { auth } from "../../lib/firebase";
 import { useRouter, useSearchParams } from "next/navigation";
-
-import React, { useState } from "react";
+import React, { useState, Suspense } from "react";
 import { signInWithEmailAndPassword } from "firebase/auth";
 
-export default function LoginPage() {
+function LoginContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [email, setEmail] = useState("");
@@ -19,10 +18,10 @@ export default function LoginPage() {
     setLoading(true);
 
     try {
-  await signInWithEmailAndPassword(auth, email, password);
-  // Redirect after successful login — respect `from` query param if present
-  const from = searchParams?.get('from') ?? '/';
-  router.push(from);
+      await signInWithEmailAndPassword(auth, email, password);
+      // Redirect after successful login — respect `from` query param if present
+      const from = searchParams?.get("from") ?? "/";
+      router.push(from);
     } catch (err: any) {
       const code = err?.code as string | undefined;
       if (
@@ -94,3 +93,10 @@ export default function LoginPage() {
   );
 }
 
+export default function LoginPage() {
+  return (
+    <Suspense fallback={<div>Loading login page...</div>}>
+      <LoginContent />
+    </Suspense>
+  );
+}
