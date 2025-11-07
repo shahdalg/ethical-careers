@@ -3,17 +3,17 @@
 import { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
-// Navbar is now provided globally in the app layout
 import Comment, { CommentData } from "@/components/Comment";
 import PreCompanySurveyModal from "@/components/PreCompanySurveyModal";
 import PostCompanySurveyModal from "@/components/PostCompanySurveyModal";
 import { db, auth } from "@/lib/firebase";
-import { collection, query, where, getDocs, DocumentData, doc, getDoc, updateDoc, arrayUnion, arrayRemove, increment } from "firebase/firestore";
+import { collection, query, where, getDocs, doc, getDoc, updateDoc, arrayUnion, arrayRemove, increment } from "firebase/firestore";
 import { getUserSurveyData, needsPreSurvey, needsPostSurvey } from "@/lib/surveyHelpers";
 import { onAuthStateChanged } from "firebase/auth";
 
 interface Review {
   id: string;
+  pseudonym?: string; // 👈 added
   selfIdentify: string;
   peopleText: string;
   peopleRating: number;
@@ -35,7 +35,7 @@ export default function CompanyPage() {
   const [loading, setLoading] = useState(true);
   const [commentsMap, setCommentsMap] = useState<Record<string, CommentData[]>>({});
   const [companyName, setCompanyName] = useState<string>("");
-  
+
   // Survey state
   const [userId, setUserId] = useState<string | null>(null);
   const [showPreSurvey, setShowPreSurvey] = useState(false);
@@ -44,16 +44,13 @@ export default function CompanyPage() {
 
   const fetchComments = async (reviewId: string) => {
     try {
-      const q = query(
-        collection(db, "comments"),
-        where("reviewId", "==", reviewId)
-      );
+      const q = query(collection(db, "comments"), where("reviewId", "==", reviewId));
       const snapshot = await getDocs(q);
       const comments = snapshot.docs.map(doc => ({
         id: doc.id,
         ...doc.data()
       })) as CommentData[];
-      
+
       setCommentsMap(prev => ({
         ...prev,
         [reviewId]: comments
@@ -63,7 +60,6 @@ export default function CompanyPage() {
     }
   };
 
-  // Handle like/unlike for reviews
   const handleLikeReview = async (reviewId: string, currentLikedBy: string[] = []) => {
     if (!userId) {
       alert('Please sign in to like reviews');
@@ -75,80 +71,54 @@ export default function CompanyPage() {
       const isLiked = currentLikedBy.includes(userId);
 
       if (isLiked) {
-        // Unlike
         await updateDoc(reviewRef, {
           likes: increment(-1),
           likedBy: arrayRemove(userId)
         });
       } else {
-        // Like
         await updateDoc(reviewRef, {
           likes: increment(1),
           likedBy: arrayUnion(userId)
         });
       }
 
-      // Update local state
-      setReviews(prev => prev.map(r => 
-        r.id === reviewId 
-          ? {
-              ...r,
-              likes: (r.likes || 0) + (isLiked ? -1 : 1),
-              likedBy: isLiked 
-                ? (r.likedBy || []).filter(id => id !== userId)
-                : [...(r.likedBy || []), userId]
-            }
-          : r
-      ));
+      setReviews(prev =>
+        prev.map(r =>
+          r.id === reviewId
+            ? {
+                ...r,
+                likes: (r.likes || 0) + (isLiked ? -1 : 1),
+                likedBy: isLiked
+                  ? (r.likedBy || []).filter(id => id !== userId)
+                  : [...(r.likedBy || []), userId]
+              }
+            : r
+        )
+      );
     } catch (error) {
       console.error('Error liking review:', error);
     }
   };
 
-  // Check survey status on mount
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
       if (user && company && companyName) {
         setUserId(user.uid);
-        
-        console.log('🔍 Checking survey status for:', companyName);
-        
-        // Get user's survey data
         const surveyData = await getUserSurveyData(user.uid);
-        
-        console.log('📊 Survey data:', surveyData);
-        console.log('📋 Company surveys:', surveyData?.companySurveys);
-        
-        // Check if user needs pre-survey
-        if (needsPreSurvey(surveyData, companyName)) {
-          console.log('❌ Pre-survey needed for:', companyName);
-          setShowPreSurvey(true);
-        } else {
-          console.log('✅ Pre-survey already completed for:', companyName);
-          // Check if user needs post-survey (7 days after first visit)
-          if (needsPostSurvey(surveyData, companyName)) {
-            console.log('📅 Post-survey needed for:', companyName);
-            setShowPostSurvey(true);
-          }
-        }
-        
+        if (needsPreSurvey(surveyData, companyName)) setShowPreSurvey(true);
+        else if (needsPostSurvey(surveyData, companyName)) setShowPostSurvey(true);
         setSurveyCheckComplete(true);
-      } else {
-        setSurveyCheckComplete(true);
-      }
+      } else setSurveyCheckComplete(true);
     });
-
     return () => unsubscribe();
   }, [company, companyName]);
 
-  // Calculate average ratings
   const averageRating = (field: 'peopleRating' | 'planetRating' | 'transparencyRating') => {
     const validRatings = reviews.filter(r => r[field]).map(r => r[field]);
     if (!validRatings.length) return 0;
     return validRatings.reduce((a, b) => a + b, 0) / validRatings.length;
   };
 
-  // Calculate recommendation percentage
   const recommendationPercentage = () => {
     const recommendations = reviews.filter(r => r.recommend === 'Yes').length;
     return reviews.length ? Math.round((recommendations / reviews.length) * 100) : 0;
@@ -159,23 +129,17 @@ export default function CompanyPage() {
       if (!company) return;
 
       try {
-        // Fetch company document to get proper name
         const companySlug = company.toString();
         const companyDocRef = doc(db, "companies", companySlug);
         const companyDoc = await getDoc(companyDocRef);
-        
-        if (companyDoc.exists()) {
-          setCompanyName(companyDoc.data().name);
-        } else {
-          // Fallback to decoded slug with hyphens replaced
-          setCompanyName(decodeURIComponent(companySlug).replace(/-/g, " "));
-        }
+
+        if (companyDoc.exists()) setCompanyName(companyDoc.data().name);
+        else setCompanyName(decodeURIComponent(companySlug).replace(/-/g, " "));
 
         const q = query(
           collection(db, "posts"),
           where("company", "==", decodeURIComponent(company.toString()))
         );
-
         const querySnapshot = await getDocs(q);
         const reviewsData = querySnapshot.docs.map(doc => ({
           id: doc.id,
@@ -183,10 +147,7 @@ export default function CompanyPage() {
         })) as Review[];
 
         setReviews(reviewsData);
-        // Fetch comments for each review
-        reviewsData.forEach(review => {
-          fetchComments(review.id);
-        });
+        reviewsData.forEach(review => fetchComments(review.id));
       } catch (err) {
         console.error(err);
       } finally {
@@ -202,8 +163,7 @@ export default function CompanyPage() {
       {[1, 2, 3, 4, 5].map((star) => (
         <span
           key={star}
-          className={`text-lg ${star <= rating ? 'text-yellow-500' : 'text-gray-300'
-            }`}
+          className={`text-lg ${star <= rating ? 'text-yellow-500' : 'text-gray-300'}`}
         >
           ★
         </span>
@@ -222,7 +182,6 @@ export default function CompanyPage() {
 
   return (
     <main className="bg-gray-50 text-gray-800 min-h-screen">
-      {/* Pre-Company Survey Modal */}
       {showPreSurvey && userId && companyName && (
         <PreCompanySurveyModal
           userId={userId}
@@ -231,7 +190,6 @@ export default function CompanyPage() {
         />
       )}
 
-      {/* Post-Company Survey Modal */}
       {showPostSurvey && userId && companyName && (
         <PostCompanySurveyModal
           userId={userId}
@@ -243,10 +201,7 @@ export default function CompanyPage() {
 
       <div className="p-8 max-w-6xl mx-auto">
         <div className="flex justify-between items-center mb-8">
-          <h1 className="text-2xl font-bold">
-            {companyName || "Loading..."}
-          </h1>
-
+          <h1 className="text-2xl font-bold">{companyName || "Loading..."}</h1>
           <Link
             href={`/companies/${company}/review`}
             className="text-white px-4 py-2 rounded hover:opacity-90 shadow-sm"
@@ -256,7 +211,7 @@ export default function CompanyPage() {
           </Link>
         </div>
 
-        {/* Overview Card */}
+        {/* Overview */}
         <section className="border border-gray-200 rounded-2xl p-6 bg-white shadow-sm mb-8">
           <h2 className="text-xl font-semibold mb-4 text-[#3D348B]">Company Overview</h2>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -281,7 +236,7 @@ export default function CompanyPage() {
           </div>
         </section>
 
-        {/* Reviews List */}
+        {/* Reviews */}
         <section>
           <h2 className="text-xl font-semibold mb-4 text-[#3D348B]">
             Reviews ({reviews.length})
@@ -295,6 +250,10 @@ export default function CompanyPage() {
               >
                 <div className="flex justify-between mb-4">
                   <div>
+                    {/* 👇 Added pseudonym + self-identification */}
+                    <p className="font-semibold text-[#3D348B]">
+                      {review.pseudonym || "AnonymousUser"}
+                    </p>
                     <span className="text-sm text-gray-600">
                       {review.selfIdentify === 'currentlyWork'
                         ? 'Current Employee'
@@ -325,23 +284,18 @@ export default function CompanyPage() {
                       <p className="text-sm">{review.peopleText}</p>
                     </div>
                   )}
-
                   {review.planetText && (
                     <div>
                       <h3 className="font-medium text-[#3D348B] mb-1">Planet</h3>
                       <p className="text-sm">{review.planetText}</p>
                     </div>
                   )}
-
                   {review.transparencyText && (
                     <div>
-                      <h3 className="font-medium text-[#3D348B] mb-1">
-                        Transparency
-                      </h3>
+                      <h3 className="font-medium text-[#3D348B] mb-1">Transparency</h3>
                       <p className="text-sm">{review.transparencyText}</p>
                     </div>
                   )}
-
                   {review.references && (
                     <div className="text-sm text-gray-600 pt-2">
                       <strong>References:</strong> {review.references}
@@ -363,11 +317,9 @@ export default function CompanyPage() {
                     </button>
                   </div>
 
-                  {/* Comments Section */}
+                  {/* Comments */}
                   <div className="mt-4 pt-4 border-t border-gray-100">
-                    <h3 className="font-medium text-[#3D348B] mb-2">
-                      Comments
-                    </h3>
+                    <h3 className="font-medium text-[#3D348B] mb-2">Comments</h3>
                     <Comment
                       reviewId={review.id}
                       comments={commentsMap[review.id] || []}
