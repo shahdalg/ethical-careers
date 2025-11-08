@@ -19,6 +19,7 @@ import {
   where,
   Timestamp,
   limit,
+  deleteDoc,
 } from "firebase/firestore";
 import { auth, db } from "@/lib/firebase";
 
@@ -65,6 +66,8 @@ export default function ProfilePage() {
   const [reviewMeta, setReviewMeta] = useState<Record<string, { companySlug?: string }>>({}); // map reviewId -> meta
   const [loadingData, setLoadingData] = useState(true);
   const [tab, setTab] = useState<"posts" | "comments">("posts");
+  const [deletingId, setDeletingId] = useState<string | null>(null);
+
   const initials = useMemo(() => {
     const e = user?.email ?? "";
     const left = e.split("@")[0] ?? "u";
@@ -246,6 +249,40 @@ export default function ProfilePage() {
     return d.toLocaleString();
   };
 
+  const handleDeletePost = async (postId: string) => {
+    if (!confirm("Are you sure you want to delete this review? This action cannot be undone.")) {
+      return;
+    }
+    
+    setDeletingId(postId);
+    try {
+      await deleteDoc(doc(db, "posts", postId));
+      setPosts(prev => prev.filter(p => p.id !== postId));
+    } catch (error) {
+      console.error("Error deleting post:", error);
+      alert("Failed to delete review. Please try again.");
+    } finally {
+      setDeletingId(null);
+    }
+  };
+
+  const handleDeleteComment = async (commentId: string) => {
+    if (!confirm("Are you sure you want to delete this comment? This action cannot be undone.")) {
+      return;
+    }
+    
+    setDeletingId(commentId);
+    try {
+      await deleteDoc(doc(db, "comments", commentId));
+      setComments(prev => prev.filter(c => c.id !== commentId));
+    } catch (error) {
+      console.error("Error deleting comment:", error);
+      alert("Failed to delete comment. Please try again.");
+    } finally {
+      setDeletingId(null);
+    }
+  };
+
   // -------------------- UI --------------------
   return (
     <main className="min-h-screen bg-gray-50 text-gray-800">
@@ -344,22 +381,31 @@ export default function ProfilePage() {
                           </p>
                         )
                       )}
-                      <div className="mt-4">
-                        {isReview && p.companySlug ? (
-                          <Link
-                            href={`/companies/${p.companySlug}#review-${p.id}`}
-                            className="text-sm text-[#3D348B] hover:opacity-80"
-                          >
-                            View review →
-                          </Link>
-                        ) : (
-                          <Link
-                            href={`/posts/${p.id}`}
-                            className="text-sm text-[#3D348B] hover:opacity-80"
-                          >
-                            View post →
-                          </Link>
-                        )}
+                      <div className="mt-4 flex items-center justify-between">
+                        <div>
+                          {isReview && p.companySlug ? (
+                            <Link
+                              href={`/companies/${p.companySlug}#review-${p.id}`}
+                              className="text-sm text-[#3D348B] hover:opacity-80"
+                            >
+                              View review →
+                            </Link>
+                          ) : (
+                            <Link
+                              href={`/posts/${p.id}`}
+                              className="text-sm text-[#3D348B] hover:opacity-80"
+                            >
+                              View post →
+                            </Link>
+                          )}
+                        </div>
+                        <button
+                          onClick={() => handleDeletePost(p.id)}
+                          disabled={deletingId === p.id}
+                          className="text-sm text-red-600 hover:text-red-800 disabled:opacity-50 px-3 py-1 rounded border border-red-200 hover:bg-red-50"
+                        >
+                          {deletingId === p.id ? "Deleting..." : "Delete"}
+                        </button>
                       </div>
                     </article>
                   );
@@ -399,7 +445,7 @@ export default function ProfilePage() {
                       <p className="text-sm text-gray-700 leading-relaxed bg-gray-50 p-3 rounded-lg border-l-4 border-[#44AF69]">
                         "{c.text || ""}"
                       </p>
-                      <div className="mt-3">
+                      <div className="mt-3 flex items-center justify-between">
                         <Link
                           href={reviewMeta[c.reviewId]?.companySlug
                             ? `/companies/${reviewMeta[c.reviewId]!.companySlug}#review-${c.reviewId}`
@@ -408,6 +454,13 @@ export default function ProfilePage() {
                         >
                           View review →
                         </Link>
+                        <button
+                          onClick={() => handleDeleteComment(c.id)}
+                          disabled={deletingId === c.id}
+                          className="text-sm text-red-600 hover:text-red-800 disabled:opacity-50 px-3 py-1 rounded border border-red-200 hover:bg-red-50"
+                        >
+                          {deletingId === c.id ? "Deleting..." : "Delete"}
+                        </button>
                       </div>
                     </div>
                   </article>

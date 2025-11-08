@@ -6,7 +6,7 @@ import Link from 'next/link';
 import Comment, { CommentData } from "@/components/Comment";
 import PreCompanySurveyModal from "@/components/PreCompanySurveyModal";
 import { db, auth } from "@/lib/firebase";
-import { collection, query, where, getDocs, doc, getDoc, updateDoc, arrayUnion, arrayRemove, increment } from "firebase/firestore";
+import { collection, query, where, getDocs, doc, getDoc, updateDoc, arrayUnion, arrayRemove, increment, deleteDoc } from "firebase/firestore";
 import { getUserSurveyData, needsPreSurvey } from "@/lib/surveyHelpers";
 import { onAuthStateChanged } from "firebase/auth";
 
@@ -37,6 +37,7 @@ export default function CompanyPage() {
   const [commentsMap, setCommentsMap] = useState<Record<string, CommentData[]>>({});
   const [companyName, setCompanyName] = useState<string>("");
   const [showGuidance, setShowGuidance] = useState<boolean>(false);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
 
   // Survey state
   const [userId, setUserId] = useState<string | null>(null);
@@ -98,6 +99,28 @@ export default function CompanyPage() {
       );
     } catch (error) {
       console.error('Error liking review:', error);
+    }
+  };
+
+  const handleDeleteReview = async (reviewId: string) => {
+    if (!confirm("Are you sure you want to delete this review? This action cannot be undone.")) {
+      return;
+    }
+    
+    if (!userId) {
+      alert('Please sign in to delete reviews');
+      return;
+    }
+
+    setDeletingId(reviewId);
+    try {
+      await deleteDoc(doc(db, "posts", reviewId));
+      setReviews(prev => prev.filter(r => r.id !== reviewId));
+    } catch (error) {
+      console.error('Error deleting review:', error);
+      alert('Failed to delete review. Please try again.');
+    } finally {
+      setDeletingId(null);
     }
   };
 
@@ -429,6 +452,15 @@ export default function CompanyPage() {
                       <span>👍</span>
                       <span>{review.likes || 0}</span>
                     </button>
+                    {userId === review.authorId && (
+                      <button
+                        onClick={() => handleDeleteReview(review.id)}
+                        disabled={deletingId === review.id}
+                        className="text-sm text-red-600 hover:text-red-800 disabled:opacity-50 px-3 py-1 rounded-lg border border-red-200 hover:bg-red-50"
+                      >
+                        {deletingId === review.id ? "Deleting..." : "Delete"}
+                      </button>
+                    )}
                   </div>
 
                   {/* Comments */}

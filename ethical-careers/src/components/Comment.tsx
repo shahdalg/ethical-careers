@@ -3,7 +3,7 @@ import Link from 'next/link';
 import { addComment } from '@/lib/getComments';
 import Button from './Button';
 import { db, auth } from "@/lib/firebase";
-import { doc, updateDoc, arrayUnion, arrayRemove, increment, getDoc } from "firebase/firestore";
+import { doc, updateDoc, arrayUnion, arrayRemove, increment, getDoc, deleteDoc } from "firebase/firestore";
 
 interface CommentProps {
   reviewId: string;
@@ -29,6 +29,7 @@ export default function Comment({ reviewId, onCommentAdded, comments }: CommentP
   const [error, setError] = useState<string | null>(null);
   const [localComments, setLocalComments] = useState(comments);
   const [pseudonymMap, setPseudonymMap] = useState<Record<string, string>>({}); // cache pseudonyms
+  const [deletingId, setDeletingId] = useState<string | null>(null);
 
   // Update local comments when props change
   useEffect(() => {
@@ -141,6 +142,30 @@ export default function Comment({ reviewId, onCommentAdded, comments }: CommentP
     }
   };
 
+  const handleDeleteComment = async (commentId: string) => {
+    if (!confirm("Are you sure you want to delete this comment? This action cannot be undone.")) {
+      return;
+    }
+    
+    const currentUser = auth.currentUser;
+    if (!currentUser) {
+      alert('Please sign in to delete comments');
+      return;
+    }
+
+    setDeletingId(commentId);
+    try {
+      await deleteDoc(doc(db, "comments", commentId));
+      setLocalComments(prev => prev.filter(c => c.id !== commentId));
+      onCommentAdded(); // Refresh parent component
+    } catch (error) {
+      console.error('Error deleting comment:', error);
+      alert('Failed to delete comment. Please try again.');
+    } finally {
+      setDeletingId(null);
+    }
+  };
+
   return (
     <div className="mt-4 space-y-4">
       {/* Existing Comments */}
@@ -184,6 +209,15 @@ export default function Comment({ reviewId, onCommentAdded, comments }: CommentP
                 <span>👍</span>
                 <span>{comment.likes || 0}</span>
               </button>
+              {auth.currentUser?.uid === comment.userId && (
+                <button
+                  onClick={() => handleDeleteComment(comment.id)}
+                  disabled={deletingId === comment.id}
+                  className="text-xs text-red-600 hover:text-red-800 disabled:opacity-50 px-2 py-1 rounded border border-red-200 hover:bg-red-50"
+                >
+                  {deletingId === comment.id ? "Deleting..." : "Delete"}
+                </button>
+              )}
             </div>
           </div>
         ))}
