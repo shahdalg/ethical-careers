@@ -5,10 +5,9 @@ import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import Comment, { CommentData } from "@/components/Comment";
 import PreCompanySurveyModal from "@/components/PreCompanySurveyModal";
-import PostCompanySurveyModal from "@/components/PostCompanySurveyModal";
 import { db, auth } from "@/lib/firebase";
 import { collection, query, where, getDocs, doc, getDoc, updateDoc, arrayUnion, arrayRemove, increment } from "firebase/firestore";
-import { getUserSurveyData, needsPreSurvey, needsPostSurvey } from "@/lib/surveyHelpers";
+import { getUserSurveyData, needsPreSurvey } from "@/lib/surveyHelpers";
 import { onAuthStateChanged } from "firebase/auth";
 
 interface Review {
@@ -39,7 +38,6 @@ export default function CompanyPage() {
   // Survey state
   const [userId, setUserId] = useState<string | null>(null);
   const [showPreSurvey, setShowPreSurvey] = useState(false);
-  const [showPostSurvey, setShowPostSurvey] = useState(false);
   const [surveyCheckComplete, setSurveyCheckComplete] = useState(false);
 
   const fetchComments = async (reviewId: string) => {
@@ -105,8 +103,18 @@ export default function CompanyPage() {
       if (user && company && companyName) {
         setUserId(user.uid);
         const surveyData = await getUserSurveyData(user.uid);
-        if (needsPreSurvey(surveyData, companyName)) setShowPreSurvey(true);
-        else if (needsPostSurvey(surveyData, companyName)) setShowPostSurvey(true);
+        
+        console.log('📊 Survey data:', surveyData);
+        console.log('📋 Company surveys:', surveyData?.companySurveys);
+        
+        // Check if user needs pre-survey
+        if (needsPreSurvey(surveyData, companyName)) {
+          console.log('❌ Pre-survey needed for:', companyName);
+          setShowPreSurvey(true);
+        } else {
+          console.log('✅ Pre-survey already completed for:', companyName);
+        }
+        
         setSurveyCheckComplete(true);
       } else setSurveyCheckComplete(true);
     });
@@ -132,19 +140,40 @@ export default function CompanyPage() {
         const companySlug = company.toString();
         const companyDocRef = doc(db, "companies", companySlug);
         const companyDoc = await getDoc(companyDocRef);
+        
+        let resolvedName = "";
+        if (companyDoc.exists()) {
+          resolvedName = companyDoc.data().name as string;
+          setCompanyName(resolvedName);
+        } else {
+          // Fallback to decoded slug with hyphens replaced
+          resolvedName = decodeURIComponent(companySlug).replace(/-/g, " ");
+          setCompanyName(resolvedName);
+        }
 
-        if (companyDoc.exists()) setCompanyName(companyDoc.data().name);
-        else setCompanyName(decodeURIComponent(companySlug).replace(/-/g, " "));
+        // Collect candidates for legacy records (some saved slug into 'company', some saved name)
+        const candidates = Array.from(new Set([
+          resolvedName,
+          decodeURIComponent(companySlug),
+          decodeURIComponent(companySlug).replace(/-/g, " ")
+        ].filter(Boolean)));
 
-        const q = query(
-          collection(db, "posts"),
-          where("company", "==", decodeURIComponent(company.toString()))
-        );
-        const querySnapshot = await getDocs(q);
-        const reviewsData = querySnapshot.docs.map(doc => ({
-          id: doc.id,
-          ...doc.data()
-        })) as Review[];
+        // Query by new schema (companySlug) and legacy (company in candidates)
+        const postsCol = collection(db, "posts");
+        const qSlug = query(postsCol, where("companySlug", "==", companySlug));
+        const qLegacy = query(postsCol, where("company", "in", candidates));
+
+        const [snapSlug, snapLegacy] = await Promise.all([
+          getDocs(qSlug),
+          getDocs(qLegacy)
+        ]);
+
+        // Merge unique docs by id
+        const byId = new Map<string, any>();
+        snapSlug.forEach(d => byId.set(d.id, { id: d.id, ...d.data() }));
+        snapLegacy.forEach(d => byId.set(d.id, { id: d.id, ...d.data() }));
+
+        const reviewsData = Array.from(byId.values()) as Review[];
 
         setReviews(reviewsData);
         reviewsData.forEach(review => fetchComments(review.id));
@@ -157,6 +186,7 @@ export default function CompanyPage() {
 
     fetchReviews();
   }, [company]);
+
 
   const RatingDisplay = ({ rating }: { rating: number }) => (
     <div className="flex items-center gap-1">
@@ -190,14 +220,7 @@ export default function CompanyPage() {
         />
       )}
 
-      {showPostSurvey && userId && companyName && (
-        <PostCompanySurveyModal
-          userId={userId}
-          companyName={companyName}
-          onComplete={() => setShowPostSurvey(false)}
-          onDismiss={() => setShowPostSurvey(false)}
-        />
-      )}
+      {/* Post survey now handled globally on home page */}
 
       <div className="p-8 max-w-6xl mx-auto">
         <div className="flex justify-between items-center mb-8">
@@ -245,6 +268,7 @@ export default function CompanyPage() {
           <div className="space-y-6">
             {reviews.map((review) => (
               <article
+                id={`review-${review.id}`}
                 key={review.id}
                 className="border border-gray-200 rounded-2xl p-6 bg-white shadow-sm"
               >

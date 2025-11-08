@@ -12,6 +12,8 @@ import {
 import {
   collection,
   getDocs,
+  getDoc,
+  doc,
   orderBy,
   query,
   where,
@@ -28,6 +30,17 @@ type Post = {
   content?: string;
   companyId?: string;
   companyName?: string;
+  companySlug?: string;
+  // Review fields
+  selfIdentify?: string;
+  peopleText?: string;
+  peopleRating?: number;
+  planetText?: string;
+  planetRating?: number;
+  transparencyText?: string;
+  transparencyRating?: number;
+  recommend?: string;
+  references?: string;
   createdAt?: Timestamp;
 };
 
@@ -35,7 +48,7 @@ type Comment = {
   id: string;
   authorId: string;
   authorEmail?: string;
-  postId: string;
+  reviewId: string;
   text?: string;
   createdAt?: Timestamp;
 };
@@ -44,10 +57,12 @@ export default function ProfilePage() {
   const router = useRouter();
   const [user, setUser] = useState<User | null>(auth.currentUser);
   const [loadingAuth, setLoadingAuth] = useState(true);
+  const [pseudonym, setPseudonym] = useState<string | null>(null);
 
   // data
   const [posts, setPosts] = useState<Post[]>([]);
   const [comments, setComments] = useState<Comment[]>([]);
+  const [reviewMeta, setReviewMeta] = useState<Record<string, { companySlug?: string }>>({}); // map reviewId -> meta
   const [loadingData, setLoadingData] = useState(true);
   const [tab, setTab] = useState<"posts" | "comments">("posts");
   const initials = useMemo(() => {
@@ -58,15 +73,36 @@ export default function ProfilePage() {
   }, [user]);
 
   useEffect(() => {
-    const unsub = onAuthStateChanged(auth, (u) => {
+    const unsub = onAuthStateChanged(auth, async (u) => {
       setUser(u);
       setLoadingAuth(false);
+      
+      // Fetch pseudonym from Firestore
+      if (u) {
+        try {
+          const userDocRef = doc(db, "users", u.uid);
+          const userDoc = await getDoc(userDocRef);
+          if (userDoc.exists()) {
+            const data = userDoc.data();
+            console.log("User data:", data);
+            console.log("Pseudonym:", data.pseudonym);
+            setPseudonym(data.pseudonym || null);
+          } else {
+            console.log("User document does not exist");
+          }
+        } catch (error) {
+          console.error("Error fetching pseudonym:", error);
+        }
+      } else {
+        setPseudonym(null);
+      }
     });
     return () => unsub();
   }, []);
 
+  // Refetch function - exposed for refreshing after actions
   useEffect(() => {
-    const load = async () => {
+    const loadProfileData = async () => {
       if (!user) {
         setPosts([]);
         setComments([]);
@@ -103,14 +139,100 @@ export default function ProfilePage() {
 
         setPosts(postsData);
         setComments(commentsData);
+
+        // Build reviewId -> companySlug map for deep linking (comments may reference reviews not authored by user)
+        const uniqueReviewIds = Array.from(
+          new Set(commentsData.map(c => c.reviewId).filter(Boolean))
+        ).filter(id => !reviewMeta[id]);
+        if (uniqueReviewIds.length) {
+          const metaEntries: [string, { companySlug?: string }][] = [];
+          await Promise.all(
+            uniqueReviewIds.map(async (rid) => {
+              try {
+                const docRef = doc(db, "posts", rid);
+                const rDoc = await getDoc(docRef);
+                if (rDoc.exists()) {
+                  const data = rDoc.data() as any;
+                  metaEntries.push([rid, { companySlug: data.companySlug }]);
+                }
+              } catch (e) {
+                // ignore failures
+              }
+            })
+          );
+          if (metaEntries.length) {
+            setReviewMeta(prev => ({ ...prev, ...Object.fromEntries(metaEntries) }));
+          }
+        }
       } catch (e) {
         console.error("Failed to load profile data", e);
       } finally {
         setLoadingData(false);
       }
     };
+
     // Only load after auth status known
-    if (!loadingAuth) load();
+    if (!loadingAuth) loadProfileData();
+  }, [user, loadingAuth]);
+
+  // Refresh data when page becomes visible (after navigating back)
+  useEffect(() => {
+    const loadProfileData = async () => {
+      if (!user) return;
+      setLoadingData(true);
+      try {
+        const postsQ = query(
+          collection(db, "posts"),
+          where("authorId", "==", user.uid),
+          orderBy("createdAt", "desc"),
+          limit(100)
+        );
+        const postsSnap = await getDocs(postsQ);
+        const postsData: Post[] = postsSnap.docs.map((d) => ({
+          id: d.id,
+          ...(d.data() as any),
+        }));
+
+        const commentsQ = query(
+          collection(db, "comments"),
+          where("authorId", "==", user.uid),
+          orderBy("createdAt", "desc"),
+          limit(100)
+        );
+        const commentsSnap = await getDocs(commentsQ);
+        const commentsData: Comment[] = commentsSnap.docs.map((d) => ({
+          id: d.id,
+          ...(d.data() as any),
+        }));
+
+        setPosts(postsData);
+        setComments(commentsData);
+      } catch (e) {
+        console.error("Failed to load profile data", e);
+      } finally {
+        setLoadingData(false);
+      }
+    };
+
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === "visible" && user && !loadingAuth) {
+        loadProfileData();
+      }
+    };
+
+    const handleFocus = () => {
+      if (user && !loadingAuth) {
+        loadProfileData();
+      }
+    };
+
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+    window.addEventListener("focus", handleFocus);
+    
+    return () => {
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
+      window.removeEventListener("focus", handleFocus);
+    };
   }, [user, loadingAuth]);
 
   useEffect(() => {
@@ -135,7 +257,9 @@ export default function ProfilePage() {
             {initials}
           </div>
           <div>
-            <h1 className="text-2xl font-semibold text-[#3D348B]">Your Profile</h1>
+            <h1 className="text-2xl font-semibold text-[#3D348B]">
+              {loadingAuth ? "Loading..." : (pseudonym || "Your Profile")}
+            </h1>
             <p className="text-sm text-gray-600">{user?.email}</p>
           </div>
         </div>
@@ -150,7 +274,7 @@ export default function ProfilePage() {
                 : "bg-white text-gray-700 border border-gray-200 hover:bg-gray-50"
             }`}
           >
-            Posts ({posts.length})
+            Reviews ({posts.length})
           </button>
           <button
             onClick={() => setTab("comments")}
@@ -175,41 +299,71 @@ export default function ProfilePage() {
           <>
             {posts.length === 0 ? (
               <div className="mt-10 text-center text-gray-600">
-                You haven’t posted yet.
+                You haven't posted any reviews yet.
               </div>
             ) : (
               <div className="mt-6 grid gap-6">
-                {posts.map((p) => (
-                  <article
-                    key={p.id}
-                    className="rounded-2xl border border-gray-200 bg-white p-5 shadow-sm hover:shadow-md transition"
-                  >
-                    <div className="flex items-center justify-between gap-3">
-                      <h3 className="text-lg font-semibold text-gray-900">
-                        {p.title || "Untitled Post"}
-                      </h3>
-                      <span className="text-xs text-gray-500">{fmt(p.createdAt)}</span>
-                    </div>
-                    {p.companyName && (
-                      <p className="mt-1 text-sm text-[#3D348B]">
-                        Company: {p.companyName}
-                      </p>
-                    )}
-                    {p.content && (
-                      <p className="mt-3 text-sm text-gray-700 leading-relaxed line-clamp-4">
-                        {p.content}
-                      </p>
-                    )}
-                    <div className="mt-4">
-                      <Link
-                        href={`/posts/${p.id}`}
-                        className="text-sm text-[#3D348B] hover:opacity-80"
-                      >
-                        View post →
-                      </Link>
-                    </div>
-                  </article>
-                ))}
+                {posts.map((p) => {
+                  // Determine if this is a review (has review fields) or a regular post
+                  const isReview = p.peopleText || p.planetText || p.transparencyText;
+                  const reviewPreview = [
+                    p.peopleText,
+                    p.planetText,
+                    p.transparencyText
+                  ].filter(Boolean).join(' • ').slice(0, 200);
+                  
+                  return (
+                    <article
+                      key={p.id}
+                      className="rounded-2xl border border-gray-200 bg-white p-5 shadow-sm hover:shadow-md transition"
+                    >
+                      <div className="flex items-center justify-between gap-3">
+                        <h3 className="text-lg font-semibold text-gray-900">
+                          {isReview ? `Review: ${p.companyName || 'Company'}` : (p.title || "Untitled Post")}
+                        </h3>
+                        <span className="text-xs text-gray-500">{fmt(p.createdAt)}</span>
+                      </div>
+                      {p.companyName && (
+                        <p className="mt-1 text-sm text-[#3D348B]">
+                          Company: {p.companyName}
+                        </p>
+                      )}
+                      {isReview && p.recommend && (
+                        <p className="mt-2 text-sm font-medium" style={{ color: p.recommend === 'Yes' ? '#44AF69' : '#F77F00' }}>
+                          Recommendation: {p.recommend}
+                        </p>
+                      )}
+                      {isReview ? (
+                        <p className="mt-3 text-sm text-gray-700 leading-relaxed line-clamp-4">
+                          {reviewPreview}...
+                        </p>
+                      ) : (
+                        p.content && (
+                          <p className="mt-3 text-sm text-gray-700 leading-relaxed line-clamp-4">
+                            {p.content}
+                          </p>
+                        )
+                      )}
+                      <div className="mt-4">
+                        {isReview && p.companySlug ? (
+                          <Link
+                            href={`/companies/${p.companySlug}#review-${p.id}`}
+                            className="text-sm text-[#3D348B] hover:opacity-80"
+                          >
+                            View review →
+                          </Link>
+                        ) : (
+                          <Link
+                            href={`/posts/${p.id}`}
+                            className="text-sm text-[#3D348B] hover:opacity-80"
+                          >
+                            View post →
+                          </Link>
+                        )}
+                      </div>
+                    </article>
+                  );
+                })}
               </div>
             )}
           </>
@@ -219,7 +373,7 @@ export default function ProfilePage() {
           <>
             {comments.length === 0 ? (
               <div className="mt-10 text-center text-gray-600">
-                You haven’t written any comments yet.
+                You haven't written any comments yet.
               </div>
             ) : (
               <div className="mt-6 grid gap-6">
@@ -228,21 +382,34 @@ export default function ProfilePage() {
                     key={c.id}
                     className="rounded-2xl border border-gray-200 bg-white p-5 shadow-sm hover:shadow-md transition"
                   >
-                    <div className="flex items-center justify-between gap-3">
-                      <h3 className="text-sm font-medium text-gray-900">
-                        Comment on{" "}
-                        <Link
-                          href={`/posts/${c.postId}`}
-                          className="text-[#3D348B] hover:opacity-80"
-                        >
-                          post
-                        </Link>
-                      </h3>
-                      <span className="text-xs text-gray-500">{fmt(c.createdAt)}</span>
+                    <div className="flex items-start justify-between gap-3 mb-3">
+                      <div className="flex items-center gap-2">
+                        <div className="w-8 h-8 rounded-full bg-[#F7B801] flex items-center justify-center text-white text-xs font-semibold">
+                          💬
+                        </div>
+                        <div>
+                          <h3 className="text-sm font-semibold text-gray-900">
+                            Comment on Review
+                          </h3>
+                          <span className="text-xs text-gray-500">{fmt(c.createdAt)}</span>
+                        </div>
+                      </div>
                     </div>
-                    <p className="mt-3 text-sm text-gray-700 leading-relaxed">
-                      {c.text || ""}
-                    </p>
+                    <div className="pl-10">
+                      <p className="text-sm text-gray-700 leading-relaxed bg-gray-50 p-3 rounded-lg border-l-4 border-[#44AF69]">
+                        "{c.text || ""}"
+                      </p>
+                      <div className="mt-3">
+                        <Link
+                          href={reviewMeta[c.reviewId]?.companySlug
+                            ? `/companies/${reviewMeta[c.reviewId]!.companySlug}#review-${c.reviewId}`
+                            : `#`}
+                          className="text-sm text-[#3D348B] hover:opacity-80 font-medium inline-flex items-center gap-1 disabled:opacity-40"
+                        >
+                          View review →
+                        </Link>
+                      </div>
+                    </div>
                   </article>
                 ))}
               </div>

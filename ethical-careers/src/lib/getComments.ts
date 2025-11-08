@@ -7,6 +7,7 @@ export interface Comment {
   text: string;
   createdAt: any;
   userId: string;
+  authorEmail?: string;
 }
 
 // Fetch comments for a specific review
@@ -40,7 +41,9 @@ export async function addComment(reviewId: string, text: string) {
       reviewId,
       text: text.trim(),
       createdAt: Timestamp.now(),
-      userId: currentUser.uid
+      userId: currentUser.uid,
+      authorId: currentUser.uid,
+      authorEmail: currentUser.email
     };
 
     const docRef = await addDoc(collection(db, 'comments'), comment);
