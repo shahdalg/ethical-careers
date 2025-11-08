@@ -1,14 +1,16 @@
 "use client";
+
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { auth, db } from "../../lib/firebase";
+import { auth, db } from "@/lib/firebase";
 import {
   createUserWithEmailAndPassword,
   updateProfile,
+  sendEmailVerification,
 } from "firebase/auth";
 import { doc, setDoc, serverTimestamp } from "firebase/firestore";
 
-// ✅ Random pseudonym generator
+// 🔹 Random pseudonym generator
 function generatePseudonym() {
   const adjectives = [
     "Curious",
@@ -33,7 +35,7 @@ function generatePseudonym() {
   const adj = adjectives[Math.floor(Math.random() * adjectives.length)];
   const noun = nouns[Math.floor(Math.random() * nouns.length)];
   const num = Math.floor(Math.random() * 900 + 100); // 100–999
-  return `${adj}${noun}${num}`; // e.g., BrightOtter392
+  return `${adj}${noun}${num}`;
 }
 
 export default function SignupPage() {
@@ -46,25 +48,18 @@ export default function SignupPage() {
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
-  // flow
-  const [step, setStep] = useState<"signup" | "survey">("signup");
+  // verification flow state
+  const [verificationSent, setVerificationSent] = useState(false);
+  const [verificationChecking, setVerificationChecking] = useState(false);
+  const [verificationError, setVerificationError] = useState<string | null>(null);
   const [newUserId, setNewUserId] = useState<string | null>(null);
-  const [assignedPseudonym, setAssignedPseudonym] = useState<string | null>(null);
 
-  // survey state
-  const [q1, setQ1] = useState(""); // 1–5
-  const [q2, setQ2] = useState("");
-  const [q3, setQ3] = useState("");
-  const [q4, setQ4] = useState("");
-  const [q5, setQ5] = useState("");
-  const [q6, setQ6] = useState(""); // yes/no/na
-  const [surveyError, setSurveyError] = useState<string | null>(null);
-  const [surveyLoading, setSurveyLoading] = useState(false);
-
-  // 🔹 Handle signup
+  // 🔹 Handle signup: create user, save profile, send verification email
   const handleSignup = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
+    setVerificationError(null);
+    setVerificationSent(false);
     setLoading(true);
 
     try {
@@ -76,25 +71,42 @@ export default function SignupPage() {
         await updateProfile(user, { displayName });
       }
 
-      // basic user profile doc (keep as-is but include pseudonym)
-      await setDoc(doc(db, "users", user.uid), {
-        uid: user.uid,
-        email,
-        displayName: displayName || "",
-        pseudonym, // 👈 store here
-        bio: "",
-        photoURL: user.photoURL || "",
-        createdAt: serverTimestamp(),
-        updatedAt: serverTimestamp(),
-        submittedInitialSurvey: false, // Will be set to true after survey completion
-        companySurveys: {}, // Map of companyId -> {preSubmitted, postSubmitted, firstVisitDate}
-        firstCompanyVisitDate: null, // Date when user first visited any company page
+      // base user doc (pseudonym stored here)
+      await setDoc(
+        doc(db, "users", user.uid),
+        {
+          uid: user.uid,
+          email,
+          displayName: displayName || "",
+          pseudonym,
+          bio: "",
+          photoURL: user.photoURL || "",
+          createdAt: serverTimestamp(),
+          updatedAt: serverTimestamp(),
+          submittedInitialSurvey: false,
+          companySurveys: {},
+          firstCompanyVisitDate: null,
+        },
+        { merge: true }
+      );
+
+      setNewUserId(user.uid);
+
+      // 🔹 Verification link:
+      // - Firebase shows its success page
+      // - "Continue" button goes to /signup/survey with uid + email
+      const verifyUrl =
+        window.location.origin +
+        `/signup/survey?uid=${encodeURIComponent(
+          user.uid
+        )}&email=${encodeURIComponent(email)}`;
+
+      await sendEmailVerification(user, {
+        url: verifyUrl,
+        handleCodeInApp: false,
       });
 
-      // move to survey step
-      setNewUserId(user.uid);
-      setAssignedPseudonym(pseudonym);
-      setStep("survey");
+      setVerificationSent(true);
     } catch (err: any) {
       console.error(err);
       setError(err?.message || "Unable to create account.");
@@ -103,114 +115,126 @@ export default function SignupPage() {
     }
   };
 
-  // 🔹 Handle survey submit → save to "signupSurvey" collection
-  const handleSurveySubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setSurveyError(null);
-
-    if (!q1 || !q2 || !q3 || !q4 || !q5 || !q6) {
-      setSurveyError("Please answer all questions before continuing.");
-      return;
-    }
-    if (!newUserId) {
-      router.push("/");
-      return;
-    }
+  // 🔹 "I've verified" button: check emailVerified & then send to survey
+  const handleCheckVerified = async () => {
+    setVerificationError(null);
+    setVerificationChecking(true);
 
     try {
-      setSurveyLoading(true);
+      const current = auth.currentUser;
+      if (!current) {
+        setVerificationError("Session expired. Please sign in again.");
+        return;
+      }
 
-      // one doc per user:
-      // /signupSurvey/{uid}
-      await setDoc(
-        doc(db, "signupSurvey", newUserId),
-        {
-          uid: newUserId,
-          email, // optional; you can remove if you want it more anonymized
-          pseudonym: assignedPseudonym || null,
-          workerCommunity: Number(q1),
-          environmentImpact: Number(q2),
-          transparency: Number(q3),
-          trustCompanyStatements: Number(q4),
-          ethicsAffectChoices: Number(q5),
-          lookedUpEthicsLast12mo: q6, // "yes" | "no" | "na"
-          submittedAt: serverTimestamp(),
-        },
-        { merge: true }
-      );
+      await current.reload();
 
-      // Mark initial survey as completed in user profile
-      await setDoc(
-        doc(db, "users", newUserId),
-        {
-          submittedInitialSurvey: true,
-          updatedAt: serverTimestamp(),
-        },
-        { merge: true }
-      );
-
-      router.push("/");
+      if (current.emailVerified) {
+        const dest =
+          `/signup/survey?uid=${encodeURIComponent(
+            current.uid
+          )}&email=${encodeURIComponent(current.email || "")}`;
+        router.push(dest);
+      } else {
+        setVerificationError(
+          "We haven’t detected verification yet. Please click the link in your email, then try again."
+        );
+      }
     } catch (err: any) {
       console.error(err);
-      setSurveyError(
-        "Something went wrong saving your responses. Please try again."
-      );
+      setVerificationError("Error checking verification status. Try again.");
     } finally {
-      setSurveyLoading(false);
+      setVerificationChecking(false);
+    }
+  };
+
+  // 🔹 Resend verification email — does NOT start survey, just resends
+  const handleResendVerification = async () => {
+    setVerificationError(null);
+
+    try {
+      const current = auth.currentUser;
+      if (!current || !newUserId) {
+        setVerificationError("Please create your account first.");
+        return;
+      }
+
+      const verifyUrl =
+        window.location.origin +
+        `/signup/survey?uid=${encodeURIComponent(
+          current.uid
+        )}&email=${encodeURIComponent(current.email || "")}`;
+
+      await sendEmailVerification(current, {
+        url: verifyUrl,
+        handleCodeInApp: false,
+      });
+
+      setVerificationSent(true);
+      setVerificationError(
+        "Verification email resent. Please check your inbox (and spam)."
+      );
+    } catch (err: any) {
+      console.error(err);
+      setVerificationError("Failed to resend verification email.");
     }
   };
 
   // ---------- UI ----------
   return (
     <main className="flex min-h-screen items-center justify-center p-4 bg-gray-50">
-      {step === "signup" && (
-        <form
-          onSubmit={handleSignup}
-          className="w-full max-w-md border bg-white p-6 rounded-lg shadow flex flex-col gap-4"
-        >
-          <h2 className="text-2xl font-semibold text-center">
-            Create your account
-          </h2>
-          <p className="text-xs text-gray-500 text-center">
-            You’ll be assigned an anonymous pseudonym used for posts & reviews.
-          </p>
+      <form
+        onSubmit={handleSignup}
+        className="w-full max-w-md border bg-white p-6 rounded-lg shadow flex flex-col gap-4"
+      >
+        <h2 className="text-2xl font-semibold text-center">
+          Create your account
+        </h2>
+        <p className="text-xs text-gray-500 text-center">
+          You’ll be assigned an anonymous pseudonym used for posts & reviews.
+        </p>
 
-          <label className="flex flex-col gap-1">
-            <span>Email</span>
-            <input
-              type="email"
-              className="border p-2 rounded"
-              required
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-            />
-          </label>
+        <label className="flex flex-col gap-1">
+          <span>Email</span>
+          <input
+            type="email"
+            className="border p-2 rounded"
+            required
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            disabled={verificationSent} // lock after sending
+          />
+        </label>
 
-          <label className="flex flex-col gap-1">
-            <span>Password</span>
-            <input
-              type="password"
-              className="border p-2 rounded"
-              required
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-            />
-          </label>
+        <label className="flex flex-col gap-1">
+          <span>Password</span>
+          <input
+            type="password"
+            className="border p-2 rounded"
+            required
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            disabled={verificationSent}
+          />
+        </label>
 
-          {/* optional display name input if you want later
-          <label className="flex flex-col gap-1">
-            <span>Display name (optional)</span>
-            <input
-              type="text"
-              className="border p-2 rounded"
-              value={displayName}
-              onChange={(e) => setDisplayName(e.target.value)}
-            />
-          </label>
-          */}
+        {/* Optional display name, if you want it later
+        <label className="flex flex-col gap-1">
+          <span>Display name (optional)</span>
+          <input
+            type="text"
+            className="border p-2 rounded"
+            value={displayName}
+            onChange={(e) => setDisplayName(e.target.value)}
+            disabled={verificationSent}
+          />
+        </label>
+        */}
 
-          {error && <p className="text-sm text-red-600">{error}</p>}
+        {error && <p className="text-sm text-red-600">{error}</p>}
 
+        {/* Initial create button (before verification email is sent) */}
+        {!verificationSent && (
           <button
             type="submit"
             disabled={loading}
@@ -218,153 +242,58 @@ export default function SignupPage() {
           >
             {loading ? "Creating account..." : "Create Account"}
           </button>
+        )}
 
-          <p className="text-sm text-center mt-2">
-            Already have an account?{" "}
-            <a href="/login" className="text-blue-600 hover:underline">
-              Click here
-            </a>
-          </p>
-        </form>
-      )}
-
-      {step === "survey" && (
-        <form
-          onSubmit={handleSurveySubmit}
-          className="w-full max-w-2xl border bg-white p-6 rounded-lg shadow flex flex-col gap-5"
-        >
-          <h2 className="text-2xl font-semibold text-center mb-1">
-            Before you start, a quick snapshot 🌱
-          </h2>
-          {assignedPseudonym && (
-            <p className="text-sm text-center text-gray-600 mb-2">
-              Your anonymous name on the platform is{" "}
-              <span className="font-semibold text-[#3D348B]">
-                {assignedPseudonym}
-              </span>
-              .
+        {/* After email is sent */}
+        {verificationSent && (
+          <div className="mt-3 p-3 border rounded-md bg-gray-50 text-xs flex flex-col gap-2">
+            <p>
+              We’ve sent a verification link to{" "}
+              <span className="font-semibold">{email}</span>. Click the link in
+              your email to verify your account. You can either:
             </p>
-          )}
-          <p className="text-xs text-gray-500 text-center mb-4">
-            These questions help us understand how people think about ethics and
-            careers. Responses are stored separately so we can analyze trends.
-          </p>
+            <ul className="list-disc list-inside space-y-1">
+              <li>
+                Use the <strong>“Continue”</strong> button on the verification
+                success page to go straight to your signup survey.
+              </li>
+              <li>
+                Or return here after verifying and click{" "}
+                <strong>“I’ve verified”</strong> to continue.
+              </li>
+            </ul>
 
-          <ScaleQuestion
-            label="I consider how a company treats its workers and communities when I look at jobs."
-            value={q1}
-            onChange={setQ1}
-          />
-          <ScaleQuestion
-            label="I consider a company’s environmental impact when I look at jobs."
-            value={q2}
-            onChange={setQ2}
-          />
-          <ScaleQuestion
-            label="I look for transparency (reports, supply chains, etc) before I apply."
-            value={q3}
-            onChange={setQ3}
-          />
-          <ScaleQuestion
-            label="I trust statements made by companies about their ethical practices."
-            value={q4}
-            onChange={setQ4}
-          />
-          <ScaleQuestion
-            label="Ethical concerns have changed or could change the companies I’m willing to work for."
-            value={q5}
-            onChange={setQ5}
-          />
+            {verificationError && (
+              <p className="text-red-600">{verificationError}</p>
+            )}
 
-          {/* Q6 */}
-          <div className="flex flex-col gap-2">
-            <p className="text-sm text-gray-800">
-              In the last 12 months, I’ve looked up a company’s ethics,
-              sustainability, or human-rights record before applying.
-            </p>
-            <div className="flex flex-wrap gap-4 text-sm">
-              {[
-                { label: "Yes", value: "yes" },
-                { label: "No", value: "no" },
-                {
-                  label:
-                    "Not applicable (I have not looked for jobs in the last 12 months)",
-                  value: "na",
-                },
-              ].map((opt) => (
-                <label
-                  key={opt.value}
-                  className="inline-flex items-center gap-2"
-                >
-                  <input
-                    type="radio"
-                    name="q6"
-                    value={opt.value}
-                    checked={q6 === opt.value}
-                    onChange={(e) => setQ6(e.target.value)}
-                    className="accent-[#3D348B]"
-                    required
-                  />
-                  <span>{opt.label}</span>
-                </label>
-              ))}
+            <div className="flex gap-2 items-center mt-1">
+              <button
+                type="button"
+                onClick={handleCheckVerified}
+                disabled={verificationChecking}
+                className="bg-[#3D348B] text-white px-3 py-1 rounded text-xs disabled:opacity-60"
+              >
+                {verificationChecking ? "Checking..." : "I’ve verified"}
+              </button>
+              <button
+                type="button"
+                onClick={handleResendVerification}
+                className="text-[#3D348B] text-xs underline"
+              >
+                Resend email
+              </button>
             </div>
           </div>
+        )}
 
-          {surveyError && (
-            <p className="text-sm text-red-600 mt-1">{surveyError}</p>
-          )}
-
-          <button
-            type="submit"
-            disabled={surveyLoading}
-            className="mt-4 bg-[#3D348B] hover:bg-[#2E256E] disabled:opacity-60 text-white font-semibold py-2 px-4 rounded transition-colors"
-          >
-            {surveyLoading ? "Saving responses..." : "Finish & continue"}
-          </button>
-        </form>
-      )}
+        <p className="text-sm text-center mt-2">
+          Already have an account?{" "}
+          <a href="/login" className="text-blue-600 hover:underline">
+            Click here
+          </a>
+        </p>
+      </form>
     </main>
-  );
-}
-
-/**
- * 1–5 Likert question component
- */
-function ScaleQuestion({
-  label,
-  value,
-  onChange,
-}: {
-  label: string;
-  value: string;
-  onChange: (v: string) => void;
-}) {
-  const name = label.slice(0, 20).replace(/\s+/g, "_"); // ensure unique-ish name
-
-  return (
-    <div className="flex flex-col gap-2">
-      <p className="text-sm text-gray-800">{label}</p>
-      <div className="flex gap-4 mt-1">
-        {[1, 2, 3, 4, 5].map((n) => (
-          <label key={n} className="inline-flex items-center gap-2 text-sm">
-            <input
-              type="radio"
-              name={name}
-              value={n}
-              checked={value === String(n)}
-              onChange={(e) => onChange(e.target.value)}
-              className="accent-[#3D348B]"
-              required={!value}
-            />
-            <span>{n}</span>
-          </label>
-        ))}
-      </div>
-      <div className="flex gap-4 text-[10px] text-gray-500 mt-1">
-        <span>1 = Strongly disagree</span>
-        <span>5 = Strongly agree</span>
-      </div>
-    </div>
   );
 }
