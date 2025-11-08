@@ -260,32 +260,32 @@ export default function CompanyPage() {
           </Link>
         </div>
 
-        {/* Featured Overall Review */}
-        {(() => {
-          const withOverall = reviews.filter(r => (r.overallText || "").trim().length > 0);
-          if (!withOverall.length) return null;
-          const featured = [...withOverall].sort((a, b) => {
-            const likeDiff = (b.likes || 0) - (a.likes || 0);
-            if (likeDiff !== 0) return likeDiff;
-            const aTime = typeof a.createdAt?.toMillis === 'function' ? a.createdAt.toMillis() : (a.createdAt?.seconds ? a.createdAt.seconds * 1000 : 0);
-            const bTime = typeof b.createdAt?.toMillis === 'function' ? b.createdAt.toMillis() : (b.createdAt?.seconds ? b.createdAt.seconds * 1000 : 0);
-            return bTime - aTime;
-          })[0];
-          return (
-            <section className="border border-gray-200 rounded-2xl p-6 bg-white shadow-sm mb-8">
-              <h2 className="text-xl font-semibold mb-3 text-[#3D348B]">Overall Review</h2>
-              <p className="text-gray-800 whitespace-pre-line">{featured.overallText}</p>
-              <div className="mt-3 flex items-center justify-between text-sm text-gray-600">
-                <span>by <span className="font-medium text-[#3D348B]">{featured.pseudonym || 'AnonymousUser'}</span></span>
-                <span>{new Date((featured.createdAt?.toDate ? featured.createdAt.toDate() : new Date())).toLocaleDateString()}</span>
-              </div>
-            </section>
-          );
-        })()}
-
         {/* Overview */}
         <section className="border border-gray-200 rounded-2xl p-6 bg-white shadow-sm mb-8">
-          <h2 className="text-xl font-semibold mb-4 text-[#3D348B]">Company Overview</h2>
+          
+          {/* Overall Rating - Large and Prominent */}
+          <div className="mb-8 pb-6 border-b border-gray-200 text-center">
+            <h3 className="text-2xl font-bold mb-3 text-[#3D348B]">Overall Rating</h3>
+            <div className="flex items-center justify-center gap-2 mb-2">
+              {[1, 2, 3, 4, 5].map((star) => {
+                const avgRating = (averageRating('peopleRating') + averageRating('planetRating') + averageRating('transparencyRating')) / 3;
+                return (
+                  <span
+                    key={star}
+                    className={`text-4xl ${star <= avgRating ? 'text-yellow-500' : 'text-gray-300'}`}
+                  >
+                    ★
+                  </span>
+                );
+              })}
+            </div>
+            <span className="text-3xl font-bold text-gray-900">
+              {((averageRating('peopleRating') + averageRating('planetRating') + averageRating('transparencyRating')) / 3).toFixed(1)}
+            </span>
+            <span className="text-lg text-gray-600"> / 5.0</span>
+          </div>
+
+          {/* Category Ratings */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             <div>
               <h3 className="font-medium mb-2">People Rating</h3>
