@@ -1,9 +1,10 @@
 "use client";
 
+import { Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import SignupSurvey from "@/components/SignupSurvey";
 
-export default function SignupSurveyPage() {
+function SurveyContent() {
   const params = useSearchParams();
   const uid = params.get("uid");
   const email = params.get("email") || "";
@@ -33,5 +34,17 @@ export default function SignupSurveyPage() {
     <main className="flex min-h-screen items-center justify-center p-4 bg-gray-50">
       <SignupSurvey userId={uid} email={email} />
     </main>
+  );
+}
+
+export default function SignupSurveyPage() {
+  return (
+    <Suspense fallback={
+      <main className="min-h-screen flex items-center justify-center bg-gray-50">
+        <div className="text-[#3D348B]">Loading...</div>
+      </main>
+    }>
+      <SurveyContent />
+    </Suspense>
   );
 }
