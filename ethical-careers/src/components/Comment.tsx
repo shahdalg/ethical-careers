@@ -152,9 +152,9 @@ export default function Comment({ reviewId, onCommentAdded, comments }: CommentP
           >
             <div className="flex justify-between items-start">
               <div>
-                {/* 👇 pseudonym now links to profile */}
+                {/* Pseudonym links to profile */}
                 <Link
-                  href={`/user/${comment.userId}`}
+                  href={`/profile/${comment.userId}`}
                   className="font-semibold text-[#3D348B] hover:underline"
                 >
                   {pseudonymMap[comment.userId] || "AnonymousUser"}

@@ -12,7 +12,8 @@ import { onAuthStateChanged } from "firebase/auth";
 
 interface Review {
   id: string;
-  pseudonym?: string; // 👈 added
+  pseudonym?: string;
+  authorId?: string; // Add this for profile linking
   selfIdentify: string;
   overallText?: string;
   peopleText: string;
@@ -354,10 +355,19 @@ export default function CompanyPage() {
               >
                 <div className="flex justify-between mb-4">
                   <div>
-                    {/* 👇 Added pseudonym + self-identification */}
-                    <p className="font-semibold text-[#3D348B]">
-                      {review.pseudonym || "AnonymousUser"}
-                    </p>
+                    {/* Pseudonym with link to profile */}
+                    {review.authorId ? (
+                      <Link 
+                        href={`/profile/${review.authorId}`}
+                        className="font-semibold text-[#3D348B] hover:underline"
+                      >
+                        {review.pseudonym || "AnonymousUser"}
+                      </Link>
+                    ) : (
+                      <p className="font-semibold text-[#3D348B]">
+                        {review.pseudonym || "AnonymousUser"}
+                      </p>
+                    )}
                     <span className="text-sm text-gray-600">
                       {review.selfIdentify === 'currentlyWork'
                         ? 'Current Employee'
