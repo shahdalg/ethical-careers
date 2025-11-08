@@ -14,6 +14,7 @@ interface Review {
   id: string;
   pseudonym?: string; // 👈 added
   selfIdentify: string;
+  overallText?: string;
   peopleText: string;
   peopleRating: number;
   planetText: string;
@@ -34,6 +35,7 @@ export default function CompanyPage() {
   const [loading, setLoading] = useState(true);
   const [commentsMap, setCommentsMap] = useState<Record<string, CommentData[]>>({});
   const [companyName, setCompanyName] = useState<string>("");
+  const [showGuidance, setShowGuidance] = useState<boolean>(false);
 
   // Survey state
   const [userId, setUserId] = useState<string | null>(null);
@@ -234,6 +236,29 @@ export default function CompanyPage() {
           </Link>
         </div>
 
+        {/* Featured Overall Review */}
+        {(() => {
+          const withOverall = reviews.filter(r => (r.overallText || "").trim().length > 0);
+          if (!withOverall.length) return null;
+          const featured = [...withOverall].sort((a, b) => {
+            const likeDiff = (b.likes || 0) - (a.likes || 0);
+            if (likeDiff !== 0) return likeDiff;
+            const aTime = typeof a.createdAt?.toMillis === 'function' ? a.createdAt.toMillis() : (a.createdAt?.seconds ? a.createdAt.seconds * 1000 : 0);
+            const bTime = typeof b.createdAt?.toMillis === 'function' ? b.createdAt.toMillis() : (b.createdAt?.seconds ? b.createdAt.seconds * 1000 : 0);
+            return bTime - aTime;
+          })[0];
+          return (
+            <section className="border border-gray-200 rounded-2xl p-6 bg-white shadow-sm mb-8">
+              <h2 className="text-xl font-semibold mb-3 text-[#3D348B]">Overall Review</h2>
+              <p className="text-gray-800 whitespace-pre-line">{featured.overallText}</p>
+              <div className="mt-3 flex items-center justify-between text-sm text-gray-600">
+                <span>by <span className="font-medium text-[#3D348B]">{featured.pseudonym || 'AnonymousUser'}</span></span>
+                <span>{new Date((featured.createdAt?.toDate ? featured.createdAt.toDate() : new Date())).toLocaleDateString()}</span>
+              </div>
+            </section>
+          );
+        })()}
+
         {/* Overview */}
         <section className="border border-gray-200 rounded-2xl p-6 bg-white shadow-sm mb-8">
           <h2 className="text-xl font-semibold mb-4 text-[#3D348B]">Company Overview</h2>
@@ -264,6 +289,61 @@ export default function CompanyPage() {
           <h2 className="text-xl font-semibold mb-4 text-[#3D348B]">
             Reviews ({reviews.length})
           </h2>
+
+          {/* Guidance panel: visible regardless of review count */}
+          <div className="mb-6">
+            <button
+              type="button"
+              onClick={() => setShowGuidance(v => !v)}
+              className="w-full text-left px-4 py-3 rounded-xl border border-gray-200 bg-white hover:bg-gray-50 flex items-center justify-between shadow-sm"
+              aria-expanded={showGuidance}
+            >
+              <span className="font-semibold text-[#3D348B]">What to include in a review</span>
+              <span className="text-sm text-gray-600">{showGuidance ? 'Hide' : 'Show'}</span>
+            </button>
+            {showGuidance && (
+              <div className="mt-3 border border-gray-200 rounded-xl bg-white p-5 text-sm text-gray-800 shadow-sm">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                  <div>
+                    <h3 className="font-medium text-[#3D348B] mb-2">People</h3>
+                    <ul className="list-disc pl-5 space-y-1 text-gray-700">
+                      <li>Does the company offer fair compensation and benefits? Are working conditions safe and supportive?</li>
+                      <li>What is their standing on DEI initiatives?</li>
+                      <li>How ethical/fair is the company with their employees (maternity/paternity leave, gender pay gap)?</li>
+                      <li>How does the company hold leadership accountable for ethical (mis)conduct?</li>
+                    </ul>
+                  </div>
+                  <div>
+                    <h3 className="font-medium text-[#3D348B] mb-2">Planet</h3>
+                    <ul className="list-disc pl-5 space-y-1 text-gray-700">
+                      <li>What metrics does the company use to track its environmental impact (e.g., carbon footprint, waste), and how are these tracked and reported?</li>
+                      <li>Has the company set clear, measurable, and time-bound targets for reducing its environmental impact?</li>
+                    </ul>
+                  </div>
+                  <div>
+                    <h3 className="font-medium text-[#3D348B] mb-2">Transparency</h3>
+                    <ul className="list-disc pl-5 space-y-1 text-gray-700">
+                      <li>What partners or organizations do they work with or get funded by?</li>
+                      <li>Is the company involved in any recent ethical scandals or breakthroughs?</li>
+                      <li>Are the company’s core values accessible to employees and consistently communicated?</li>
+                      <li>Is the company transparent about its operations, supply chain, and ethical practices?</li>
+                    </ul>
+                  </div>
+                </div>
+                <div className="mt-5 p-4 rounded-lg border border-dashed border-gray-300 bg-white">
+                  <div className="flex justify-between mb-2">
+                    <p className="font-medium text-[#3D348B]">Example snippet</p>
+                    <span className="text-xs text-gray-500">Guidance only</span>
+                  </div>
+                  <p className="text-sm text-gray-700"><span className="font-medium">Overall:</span> The company fosters a supportive environment and is making steady progress on sustainability. Transparency around supplier practices could improve.</p>
+                  <p className="text-sm text-gray-700 mt-2"><span className="font-medium">People:</span> Team leads prioritize psychological safety and fair workloads. Growth conversations happen quarterly and feedback is actionable.</p>
+                  <p className="text-sm text-gray-700 mt-2"><span className="font-medium">Planet:</span> There’s an annual emissions report and SBTi-aligned goals, with ongoing work to reduce Scope 3 emissions.</p>
+                  <p className="text-sm text-gray-700 mt-2"><span className="font-medium">Transparency:</span> External reporting is improving, but supplier audits and remediation plans should be clearer.</p>
+                  <p className="text-xs text-gray-500 mt-2">This example is not counted in ratings or totals.</p>
+                </div>
+              </div>
+            )}
+          </div>
 
           <div className="space-y-6">
             {reviews.map((review) => (
@@ -355,9 +435,7 @@ export default function CompanyPage() {
             ))}
 
             {reviews.length === 0 && (
-              <div className="text-center py-8 text-gray-500">
-                No reviews yet. Be the first to review this company!
-              </div>
+              <div className="py-8 text-center text-gray-500">No reviews yet. Be the first to review this company!</div>
             )}
           </div>
         </section>

@@ -13,6 +13,7 @@ export default function CompanyReviewForm() {
   const [userId, setUserId] = useState<string | null>(null);
   const [userEmail, setUserEmail] = useState<string | null>(null);
   const [userPseudonym, setUserPseudonym] = useState<string | null>(null);
+  const [showExample, setShowExample] = useState<boolean>(false);
 
   // Self Identify 4
   const [selfIdentify, setSelfIdentify] = useState("");
@@ -28,6 +29,9 @@ export default function CompanyReviewForm() {
   // Transparency
   const [transparencyText, setTransparencyText] = useState("");
   const [transparencyRating, setTransparencyRating] = useState("");
+
+  // Overall
+  const [overallText, setOverallText] = useState("");
 
   // Overall recommendation
   const [recommend, setRecommend] = useState("");
@@ -121,6 +125,7 @@ export default function CompanyReviewForm() {
     try {
       // Combine all text fields to check for inappropriate content
       const textsToCheck = [
+        overallText,
         peopleText,
         planetText,
         transparencyText,
@@ -147,6 +152,7 @@ export default function CompanyReviewForm() {
         companySlug: company?.toString() || "",
         // Keep legacy field for backward compatibility
         company: companyName,
+        overallText,
         selfIdentify,
         peopleText,
         peopleRating: Number(peopleRating) || null,
@@ -227,6 +233,56 @@ export default function CompanyReviewForm() {
           Submit a Review for {companyName || "Loading..."}
         </h1>
 
+        {/* Example guidance (read-only, not part of the form, won't affect numbers) */}
+                {/* Example guidance (read-only, not part of the form, won't affect numbers) */}
+        <div className="w-full max-w-lg mb-4">
+          <button
+            type="button"
+            onClick={() => setShowExample(v => !v)}
+            className="w-full text-left px-4 py-3 rounded-xl border border-gray-200 bg-white hover:bg-gray-50 flex items-center justify-between shadow-sm"
+            aria-expanded={showExample}
+          >
+            <span className="font-semibold text-[#3D348B]">What to include in your review</span>
+            <span className="text-sm text-gray-600">{showExample ? 'Hide' : 'Show'}</span>
+          </button>
+          {showExample && (
+            <div className="mt-3 border border-gray-200 rounded-xl bg-white p-5 text-sm text-gray-800 shadow-sm space-y-4">
+              <div>
+                <h3 className="font-medium text-[#3D348B] mb-1">People</h3>
+                <ul className="list-disc pl-5 space-y-1 text-gray-700 text-xs">
+                  <li>Does the company offer fair compensation and benefits? Are working conditions safe and supportive?</li>
+                  <li>What is their standing on DEI initiatives?</li>
+                  <li>How ethical/fair is the company with their employees (maternity/paternity leave, gender pay gap)?</li>
+                  <li>How does the company hold leadership accountable for ethical (mis)conduct?</li>
+                </ul>
+              </div>
+              <div>
+                <h3 className="font-medium text-[#3D348B] mb-1">Planet</h3>
+                <ul className="list-disc pl-5 space-y-1 text-gray-700 text-xs">
+                  <li>What metrics does the company use to track its environmental impact (e.g., carbon footprint, waste), and how are these tracked and reported?</li>
+                  <li>Has the company set clear, measurable, and time-bound targets for reducing its environmental impact?</li>
+                </ul>
+              </div>
+              <div>
+                <h3 className="font-medium text-[#3D348B] mb-1">Transparency</h3>
+                <ul className="list-disc pl-5 space-y-1 text-gray-700 text-xs">
+                  <li>What partners or organizations do they work with or get funded by?</li>
+                  <li>Is the company involved in any recent ethical scandals or breakthroughs?</li>
+                  <li>Are the company's core values accessible to employees and consistently communicated?</li>
+                  <li>Is the company transparent about its operations, supply chain, and ethical practices?</li>
+                </ul>
+              </div>
+              <div className="p-3 rounded-lg border border-dashed border-gray-300 bg-white">
+                <p className="text-sm text-gray-700 mb-2"><span className="font-medium">Overall:</span> The company fosters a supportive environment and is making steady progress on sustainability. Transparency around supplier practices could improve.</p>
+                <p className="text-sm text-gray-700 mb-2"><span className="font-medium">People:</span> Team leads prioritize psychological safety and fair workloads. Growth conversations happen quarterly.</p>
+                <p className="text-sm text-gray-700 mb-2"><span className="font-medium">Planet:</span> Annual emissions report and SBTi-aligned goals; ongoing Scope 3 reduction work.</p>
+                <p className="text-sm text-gray-700"><span className="font-medium">Transparency:</span> External reporting is improving, but supplier audits and remediation plans should be clearer.</p>
+                <p className="text-xs text-gray-500 mt-2">This example is for guidance only and will not be submitted or counted.</p>
+              </div>
+            </div>
+          )}
+        </div>
+
         {error && (
           <div className="w-full max-w-lg mb-4 p-4 bg-red-50 border border-red-200 rounded-lg text-red-700">
             <p className="font-semibold">Content Moderation Alert</p>
@@ -296,6 +352,20 @@ export default function CompanyReviewForm() {
               />
             </label>
             <RatingRadios value={transparencyRating} setValue={setTransparencyRating} name="transparencyRating" />
+          </section>
+
+          {/* Overall */}
+          <section className="border border-gray-200 rounded-2xl p-5 bg-white shadow-sm">
+            <h2 className="font-semibold mb-2 text-[#3D348B]">Overall</h2>
+            <label className="block mb-2 text-sm">
+              Share an overall summary of your experience with this company.
+              <textarea
+                value={overallText}
+                onChange={(e) => setOverallText(e.target.value)}
+                className="w-full border border-gray-300 p-2 rounded mt-1"
+                rows={3}
+              />
+            </label>
           </section>
 
           {/* Recommendation */}
