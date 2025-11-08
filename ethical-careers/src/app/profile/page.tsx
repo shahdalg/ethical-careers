@@ -365,6 +365,14 @@ export default function ProfilePage() {
                           Company: {p.companyName}
                         </p>
                       )}
+                      {isReview && p.selfIdentify && (
+                        <p className="mt-1 text-xs text-gray-600 italic">
+                          {p.selfIdentify === 'currentlyWork' ? 'I currently work here' :
+                           p.selfIdentify === 'usedToWork' ? 'I used to work here' :
+                           p.selfIdentify === 'neverWorked' ? 'I have never worked here' :
+                           p.selfIdentify}
+                        </p>
+                      )}
                       {isReview && p.recommend && (
                         <p className="mt-2 text-sm font-medium" style={{ color: p.recommend === 'Yes' ? '#44AF69' : '#F77F00' }}>
                           Recommendation: {p.recommend}

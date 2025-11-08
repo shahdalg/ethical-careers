@@ -129,12 +129,22 @@ export default function PublicProfilePage() {
                   className="border border-gray-200 rounded-xl p-5 bg-white shadow-sm"
                 >
                   <div className="flex justify-between items-start mb-3">
-                    <Link
-                      href={link}
-                      className="font-semibold text-[#3D348B] hover:underline"
-                    >
-                      {post.companyName || "Unknown Company"}
-                    </Link>
+                    <div>
+                      <Link
+                        href={link}
+                        className="font-semibold text-[#3D348B] hover:underline"
+                      >
+                        {post.companyName || "Unknown Company"}
+                      </Link>
+                      {post.selfIdentify && (
+                        <p className="text-xs text-gray-600 italic mt-1">
+                          {post.selfIdentify === 'currentlyWork' ? 'I currently work here' :
+                           post.selfIdentify === 'usedToWork' ? 'I used to work here' :
+                           post.selfIdentify === 'neverWorked' ? 'I have never worked here' :
+                           post.selfIdentify}
+                        </p>
+                      )}
+                    </div>
                     <span className="text-xs text-gray-500">
                       {post.createdAt
                         ? new Date(post.createdAt.toDate()).toLocaleDateString()
