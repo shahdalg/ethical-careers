@@ -309,50 +309,120 @@ export default function CompanyReviewForm() {
             </label>
           </section>
 
-          {/* People */}
-          <section className="border border-gray-200 rounded-2xl p-5 bg-white shadow-sm">
-            <h2 className="font-semibold mb-2 text-[#3D348B]">People</h2>
-            <label className="block mb-2 text-sm">
-              How do you feel about this company’s culture and ethics for its employees?
-              <textarea
-                value={peopleText}
-                onChange={(e) => setPeopleText(e.target.value)}
-                className="w-full border border-gray-300 p-2 rounded mt-1"
-                rows={3}
-              />
-            </label>
-            <RatingRadios value={peopleRating} setValue={setPeopleRating} name="peopleRating" />
-          </section>
 
-          {/* Planet */}
-          <section className="border border-gray-200 rounded-2xl p-5 bg-white shadow-sm">
-            <h2 className="font-semibold mb-2 text-[#3D348B]">Planet</h2>
-            <label className="block mb-2 text-sm">
-              How do you feel about this company’s sustainability and environmental practices?
-              <textarea
-                value={planetText}
-                onChange={(e) => setPlanetText(e.target.value)}
-                className="w-full border border-gray-300 p-2 rounded mt-1"
-                rows={3}
-              />
-            </label>
-            <RatingRadios value={planetRating} setValue={setPlanetRating} name="planetRating" />
-          </section>
 
-          {/* Transparency */}
-          <section className="border border-gray-200 rounded-2xl p-5 bg-white shadow-sm">
-            <h2 className="font-semibold mb-2 text-[#3D348B]">Transparency</h2>
-            <label className="block mb-2 text-sm">
-              How transparent are this company’s external practices and communications?
-              <textarea
-                value={transparencyText}
-                onChange={(e) => setTransparencyText(e.target.value)}
-                className="w-full border border-gray-300 p-2 rounded mt-1"
-                rows={3}
-              />
-            </label>
-            <RatingRadios value={transparencyRating} setValue={setTransparencyRating} name="transparencyRating" />
-          </section>
+{/* People */}
+<section className="border border-gray-200 rounded-2xl p-5 bg-white shadow-sm">
+  <h2 className="font-semibold mb-2 text-[#3D348B]">People</h2>
+
+  {/* <p className="text-xs text-gray-600 mb-2">
+    Please rate how this company treats its people: pay & benefits, inclusion,
+    respect, safety, work–life balance, and how fairly workers are treated.
+  </p> */}
+
+  <label className="block mb-2 text-sm">
+    How do you feel about this company’s culture and ethics for its employees?
+    <textarea
+      value={peopleText}
+      onChange={(e) => setPeopleText(e.target.value)}
+      className="w-full border border-gray-300 p-2 rounded mt-1"
+      rows={3}
+      // placeholder="Share specific experiences or observations (e.g., pay equity, discrimination, management behavior, support, protections, etc.)."
+    />
+  </label>
+
+  <p className="text-[10px] text-gray-600 mb-1">
+    1 = Harmful / exploitative ·
+    2 = Below expectations ·
+    3 = Mixed / acceptable but imperfect ·
+    4 = Positive / generally ethical ·
+    5 = Excellent / consistently values-driven
+  </p>
+
+  <RatingRadios
+    value={peopleRating}
+    setValue={setPeopleRating}
+    name="peopleRating"
+  />
+</section>
+
+
+{/* Planet */}
+<section className="border border-gray-200 rounded-2xl p-5 bg-white shadow-sm">
+  <h2 className="font-semibold mb-2 text-[#3D348B]">Planet</h2>
+
+  {/* <p className="text-xs text-gray-600 mb-2">
+    Please rate this company’s environmental responsibility: emissions,
+    resource use, waste reduction, renewable energy adoption, and efforts to
+    reduce its ecological footprint.
+  </p> */}
+
+  <label className="block mb-2 text-sm">
+    How do you feel about this company’s sustainability and environmental
+    practices?
+    <textarea
+      value={planetText}
+      onChange={(e) => setPlanetText(e.target.value)}
+      className="w-full border border-gray-300 p-2 rounded mt-1"
+      rows={3}
+      // placeholder="Share examples (e.g., sustainability reports, waste reduction efforts, greenwashing concerns, or community environmental impact)."
+    />
+  </label>
+
+  <p className="text-[10px] text-gray-600 mb-1">
+    1 = Actively harmful to the environment ·
+    2 = Below expectations / minimal effort ·
+    3 = Average / mixed practices ·
+    4 = Positive / proactive sustainability ·
+    5 = Leading in environmental stewardship
+  </p>
+
+  <RatingRadios
+    value={planetRating}
+    setValue={setPlanetRating}
+    name="planetRating"
+  />
+</section>
+
+{/* Transparency */}
+<section className="border border-gray-200 rounded-2xl p-5 bg-white shadow-sm">
+  <h2 className="font-semibold mb-2 text-[#3D348B]">Transparency</h2>
+
+  {/* /* <p className="text-xs text-gray-600 mb-2">
+    Please rate how openly this company communicates its values, operations,
+    and decision-making — including ethical disclosures, supply chain
+    transparency, and accountability to the public.
+  </p> */ }
+
+  <label className="block mb-2 text-sm">
+    How transparent are this company’s external practices and communications?
+   <textarea
+      value={transparencyText}
+      onChange={(e) => setTransparencyText(e.target.value)}
+      className="w-full border border-gray-300 p-2 rounded mt-1"
+      rows={3}
+      // placeholder="Include notes on clarity in reporting, honesty in advertising, or accessibility of company data."
+    /> 
+  </label>
+
+  <p className="text-[10px] text-gray-600 mb-1">
+    1 = Misleading / opaque ·
+    2 = Minimal disclosure ·
+    3 = Some transparency but limited detail ·
+    4 = Clear / open reporting ·
+    5 = Fully transparent 
+  </p>
+
+  <RatingRadios
+    value={transparencyRating}
+    setValue={setTransparencyRating}
+    name="transparencyRating"
+  />
+</section>
+
+
+
+
 
           {/* Overall */}
           <section className="border border-gray-200 rounded-2xl p-5 bg-white shadow-sm">
