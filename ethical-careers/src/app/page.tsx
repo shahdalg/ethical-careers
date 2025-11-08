@@ -98,15 +98,9 @@ const Home = () => {
             aria-hidden="true"
           />
           <img
-            src="/images/Compss.png"
+            src="/images/Compass.png"
             alt="Compass graphic"
             className="pointer-events-none select-none absolute -bottom-0 left-10 w-28 md:w-90 opacity-100 rotate-6"
-            aria-hidden="true"
-          />
-          <img
-            src="/images/needle.png"
-            alt="Needle graphic"
-            className="pointer-events-none select-none absolute -bottom-0 left-10 w-28 md:w-90 opacity-100"
             aria-hidden="true"
           />
 
