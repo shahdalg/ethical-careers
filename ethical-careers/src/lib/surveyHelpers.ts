@@ -59,9 +59,30 @@ export function needsGlobalPostSurvey(
   if (surveyData.submittedGlobalPostSurvey) return false;
   if (!surveyData.firstCompanyVisitDate) return false;
 
-  const firstVisit = new Date(surveyData.firstCompanyVisitDate);
+  // Handle Firestore Timestamp conversion
+  let firstVisit: Date;
+  if (surveyData.firstCompanyVisitDate.toDate) {
+    // It's a Firestore Timestamp
+    firstVisit = surveyData.firstCompanyVisitDate.toDate();
+  } else if (surveyData.firstCompanyVisitDate.seconds) {
+    // It's a Timestamp-like object with seconds
+    firstVisit = new Date(surveyData.firstCompanyVisitDate.seconds * 1000);
+  } else {
+    // Try converting directly
+    firstVisit = new Date(surveyData.firstCompanyVisitDate);
+  }
+
   const now = new Date();
   const daysSince = (now.getTime() - firstVisit.getTime()) / (1000 * 60 * 60 * 24);
+  
+  console.log('Global post-survey check:', {
+    firstVisit: firstVisit.toISOString(),
+    daysSince,
+    threshold: 0.001,
+    shouldShow: daysSince >= 0.001
+  });
+  
   return daysSince >= 0.001; // ~1.44 minutes for rapid testing (adjust to 7 for prod)
 }
+
  
