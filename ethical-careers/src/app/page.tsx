@@ -276,7 +276,7 @@ const Home = () => {
           Have feedback or ideas? Reach out and help shape the future of ethical work.
         </p>
         <a
-          href="mailto:hello@ethicalcareers.com"
+          href="mailto:ethicalcareers@gmail.com"
           className="inline-block bg-[#7678ED] text-white px-8 py-3 rounded-lg hover:brightness-110 transition"
         >
           Contact Us
