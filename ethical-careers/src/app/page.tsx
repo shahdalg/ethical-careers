@@ -11,7 +11,7 @@ const Home = () => {
   const revealRefs = useRef<Array<HTMLElement | null>>([]);
   revealRefs.current = [];
 
-  // 🔐 Track auth state
+  // Track auth state
   const [user, setUser] = useState<User | null>(auth.currentUser);
   useEffect(() => {
     const unsub = onAuthStateChanged(auth, (u) => setUser(u));
