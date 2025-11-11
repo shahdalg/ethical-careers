@@ -94,13 +94,13 @@ const Home = () => {
           <img
             src="/images/factorygirl.png"
             alt="Illustration of a worker near a factory"
-            className="pointer-events-none select-none absolute -bottom-10 -right-23 w-100 md:w-140 opacity-100"
+            className="pointer-events-none select-none absolute -bottom-16 -right-20 w-[35vw] min-w-[280px] max-w-[560px] opacity-100 hidden md:block"
             aria-hidden="true"
           />
           <img
             src="/images/Compass.png"
             alt="Compass graphic"
-            className="pointer-events-none select-none absolute -bottom-0 left-10 w-28 md:w-90 opacity-100 rotate-6"
+            className="pointer-events-none select-none absolute -bottom-0 left-5 w-[24vw] min-w-[190px] max-w-[400px] opacity-100 rotate-6 hidden md:block"
             aria-hidden="true"
           />
 
@@ -117,13 +117,13 @@ const Home = () => {
           src="/images/Squiggle.png"
           alt=""
           aria-hidden="true"
-          className="pointer-events-none select-none absolute -top-6 left-0 w-44 opacity-40"
+          className="pointer-events-none select-none absolute -top-6 left-0 w-[15vw] min-w-[120px] max-w-[176px] opacity-40"
         />
         <img
           src="/images/blob.png"
           alt=""
           aria-hidden="true"
-          className="pointer-events-none select-none absolute -bottom-50 right-1 w-56 opacity-70"
+          className="pointer-events-none select-none absolute -bottom-50 right-1 w-[20vw] min-w-[160px] max-w-[224px] opacity-70"
         />
 
         <h3 className="text-4xl font-extrabold text-center text-[#3D348B] mb-16 tracking-wide">
