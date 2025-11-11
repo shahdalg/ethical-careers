@@ -11,6 +11,7 @@ export default function Navbar() {
   const router = useRouter();
   const { user, loading } = useUser();
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
   // Close dropdown when clicking outside
@@ -55,6 +56,7 @@ export default function Navbar() {
           </Link>
         </div>
 
+        {/* Desktop Navigation */}
         <nav className="hidden md:flex gap-8 text-sm items-center">
           <Link href="/#companies" className="text-gray-700 hover:text-[#3D348B] transition font-medium">Companies</Link>
           <Link href="/#rankings" className="text-gray-700 hover:text-[#3D348B] transition font-medium">Rankings</Link>
@@ -104,7 +106,85 @@ export default function Navbar() {
             </div>
           )}
         </nav>
+
+        {/* Mobile Menu Button */}
+        <button
+          onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+          className="md:hidden flex flex-col gap-1.5 w-8 h-8 justify-center items-center"
+          aria-label="Toggle menu"
+        >
+          <span className={`w-6 h-0.5 bg-[#3D348B] transition-all ${isMobileMenuOpen ? 'rotate-45 translate-y-2' : ''}`}></span>
+          <span className={`w-6 h-0.5 bg-[#3D348B] transition-all ${isMobileMenuOpen ? 'opacity-0' : ''}`}></span>
+          <span className={`w-6 h-0.5 bg-[#3D348B] transition-all ${isMobileMenuOpen ? '-rotate-45 -translate-y-2' : ''}`}></span>
+        </button>
       </div>
+
+      {/* Mobile Menu */}
+      {isMobileMenuOpen && (
+        <div className="md:hidden border-t border-gray-200 bg-white">
+          <nav className="flex flex-col px-8 py-4 gap-3">
+            <Link 
+              href="/#companies" 
+              onClick={() => setIsMobileMenuOpen(false)}
+              className="text-gray-700 hover:text-[#3D348B] transition font-medium py-2"
+            >
+              Companies
+            </Link>
+            <Link 
+              href="/#rankings" 
+              onClick={() => setIsMobileMenuOpen(false)}
+              className="text-gray-700 hover:text-[#3D348B] transition font-medium py-2"
+            >
+              Rankings
+            </Link>
+            <Link 
+              href="/#how" 
+              onClick={() => setIsMobileMenuOpen(false)}
+              className="text-gray-700 hover:text-[#3D348B] transition font-medium py-2"
+            >
+              How it works
+            </Link>
+            <Link 
+              href="/#contact" 
+              onClick={() => setIsMobileMenuOpen(false)}
+              className="text-gray-700 hover:text-[#3D348B] transition font-medium py-2"
+            >
+              Contact
+            </Link>
+
+            {!loading && !user && (
+              <Link
+                href="/login"
+                onClick={() => setIsMobileMenuOpen(false)}
+                className="bg-[#7678ED] text-white px-4 py-2 rounded-md shadow-md hover:brightness-110 transition text-center mt-2"
+              >
+                Login
+              </Link>
+            )}
+
+            {!loading && user && (
+              <>
+                <Link
+                  href="/profile"
+                  onClick={() => setIsMobileMenuOpen(false)}
+                  className="text-gray-700 hover:text-[#3D348B] transition font-medium py-2 border-t border-gray-200 mt-2 pt-4"
+                >
+                  Profile ({user.email})
+                </Link>
+                <button
+                  onClick={() => {
+                    setIsMobileMenuOpen(false);
+                    handleLogout();
+                  }}
+                  className="text-left text-[#3D348B] hover:bg-[#3D348B]/10 font-medium py-2 rounded"
+                >
+                  Logout
+                </button>
+              </>
+            )}
+          </nav>
+        </div>
+      )}
     </header>
   );
 }
