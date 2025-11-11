@@ -98,7 +98,7 @@ const Home = () => {
             aria-hidden="true"
           />
           <img
-            src="/images/compass.png"
+            src="/images/Compass.png"
             alt="Compass graphic"
             className="pointer-events-none select-none absolute -bottom-0 left-5 w-[24vw] min-w-[190px] max-w-[400px] opacity-100 rotate-6 hidden md:block"
             aria-hidden="true"
@@ -120,7 +120,7 @@ const Home = () => {
           className="pointer-events-none select-none absolute -top-6 left-0 w-[15vw] min-w-[120px] max-w-[176px] opacity-40"
         />
         <img
-          src="/images/blob.png"
+          src="/images/Blob.png"
           alt="Blob graphic"
           aria-hidden="true"
           className="pointer-events-none select-none absolute -bottom-50 right-1 w-[20vw] min-w-[160px] max-w-[224px] opacity-70"
