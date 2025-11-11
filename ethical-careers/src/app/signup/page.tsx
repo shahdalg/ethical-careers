@@ -95,16 +95,15 @@ export default function SignupPage() {
       // 🔹 Verification link:
       // - Firebase shows its success page
       // - "Continue" button goes to /signup/survey with uid + email
-      const verifyUrl =
-        window.location.origin +
-        `/signup/survey?uid=${encodeURIComponent(
-          user.uid
-        )}&email=${encodeURIComponent(email)}`;
+const verifyUrl =
+  window.location.origin + "/thank-you";
 
-      await sendEmailVerification(user, {
-        url: verifyUrl,
-        handleCodeInApp: false,
-      });
+
+await sendEmailVerification(user, {
+  url: verifyUrl,
+  handleCodeInApp: false,
+});
+
 
       setVerificationSent(true);
     } catch (err: any) {
@@ -191,7 +190,7 @@ export default function SignupPage() {
           Create your account
         </h2>
         <p className="text-xs text-gray-500 text-center">
-          You’ll be assigned an anonymous pseudonym used for posts & reviews.
+          You’ll be assigned an anonymous username used for posts & reviews.
         </p>
 
         <label className="flex flex-col gap-1">
@@ -250,15 +249,11 @@ export default function SignupPage() {
             <p>
               We’ve sent a verification link to{" "}
               <span className="font-semibold">{email}</span>. Click the link in
-              your email to verify your account. You can either:
+              your email to verify your account. Please check your spam folder.
             </p>
             <ul className="list-disc list-inside space-y-1">
               <li>
-                Use the <strong>“Continue”</strong> button on the verification
-                success page to go straight to your signup survey.
-              </li>
-              <li>
-                Or return here after verifying and click{" "}
+                Return here after verifying and click {" "}
                 <strong>“I’ve verified”</strong> to continue.
               </li>
             </ul>
