@@ -13,24 +13,29 @@ import { doc, setDoc, serverTimestamp } from "firebase/firestore";
 // 🔹 Random pseudonym generator
 function generatePseudonym() {
   const adjectives = [
-    "Curious",
-    "Brave",
-    "Bright",
-    "Calm",
-    "Witty",
-    "Kind",
-    "Bold",
-    "Quiet",
+    "Curious", "Brave", "Bright", "Calm", "Witty", "Kind", "Bold", "Quiet",
+    "Swift", "Clever", "Gentle", "Noble", "Wise", "Fierce", "Humble", "Loyal",
+    "Daring", "Serene", "Vibrant", "Eager", "Honest", "Graceful", "Mighty", "Peaceful",
+    "Radiant", "Shrewd", "Spirited", "Steady", "Thoughtful", "Valiant", "Warm", "Zesty",
+    "Agile", "Creative", "Focused", "Inventive", "Mindful", "Patient", "Resilient", "Skilled",
+    "Adventurous", "Ambitious", "Artistic", "Cheerful", "Confident", "Cosmic", "Dazzling", "Dynamic",
+    "Elegant", "Energetic", "Fearless", "Free", "Friendly", "Harmonious", "Independent", "Joyful",
+    "Keen", "Lively", "Lucky", "Magical", "Mysterious", "Optimistic", "Playful", "Proud",
+    "Quick", "Reliable", "Royal", "Sassy", "Sharp", "Silent", "Sleek", "Smart",
+    "Stellar", "Strong", "Sunny", "Talented", "Tranquil", "Trusty", "Vivid", "Wild"
   ];
   const nouns = [
-    "Otter",
-    "Falcon",
-    "Fox",
-    "Panda",
-    "Dolphin",
-    "Hawk",
-    "Sparrow",
-    "Lynx",
+    "Otter", "Falcon", "Fox", "Panda", "Dolphin", "Hawk", "Sparrow", "Lynx",
+    "Wolf", "Eagle", "Bear", "Owl", "Deer", "Tiger", "Raven", "Phoenix",
+    "Dragon", "Leopard", "Crane", "Swan", "Turtle", "Jaguar", "Penguin", "Raccoon",
+    "Badger", "Bison", "Cheetah", "Coyote", "Heron", "Koala", "Moose", "Platypus",
+    "Puffin", "Salamander", "Seal", "Squirrel", "Starling", "Walrus", "Wombat", "Zebra",
+    "Albatross", "Antelope", "Armadillo", "Bat", "Beaver", "Butterfly", "Camel", "Cardinal",
+    "Chameleon", "Cobra", "Condor", "Cougar", "Crab", "Cricket", "Crow", "Dragonfly",
+    "Elephant", "Elk", "Ferret", "Flamingo", "Frog", "Gazelle", "Gecko", "Giraffe",
+    "Gorilla", "Hamster", "Hedgehog", "Hummingbird", "Iguana", "Jellyfish", "Kangaroo", "Kestrel",
+    "Lion", "Llama", "Lobster", "Lynx", "Meerkat", "Narwhal", "Newt", "Octopus",
+    "Opossum", "Ostrich", "Panther", "Parrot", "Pelican", "Python", "Quail", "Rhino"
   ];
   const adj = adjectives[Math.floor(Math.random() * adjectives.length)];
   const noun = nouns[Math.floor(Math.random() * nouns.length)];
@@ -83,7 +88,6 @@ export default function SignupPage() {
           photoURL: user.photoURL || "",
           createdAt: serverTimestamp(),
           updatedAt: serverTimestamp(),
-          submittedInitialSurvey: false,
           companySurveys: {},
           firstCompanyVisitDate: null,
         },
@@ -94,9 +98,8 @@ export default function SignupPage() {
 
       // 🔹 Verification link:
       // - Firebase shows its success page
-      // - "Continue" button goes to /signup/survey with uid + email
-const verifyUrl =
-  window.location.origin + "/thank-you";
+      // - "Continue" button goes to home page
+      const verifyUrl = window.location.origin + "/thank-you";
 
 
 await sendEmailVerification(user, {
@@ -129,11 +132,7 @@ await sendEmailVerification(user, {
       await current.reload();
 
       if (current.emailVerified) {
-        const dest =
-          `/signup/survey?uid=${encodeURIComponent(
-            current.uid
-          )}&email=${encodeURIComponent(current.email || "")}`;
-        router.push(dest);
+        router.push("/");
       } else {
         setVerificationError(
           "We haven’t detected verification yet. Please click the link in your email, then try again."
@@ -158,11 +157,7 @@ await sendEmailVerification(user, {
         return;
       }
 
-      const verifyUrl =
-        window.location.origin +
-        `/signup/survey?uid=${encodeURIComponent(
-          current.uid
-        )}&email=${encodeURIComponent(current.email || "")}`;
+      const verifyUrl = window.location.origin + "/thank-you";
 
       await sendEmailVerification(current, {
         url: verifyUrl,

@@ -30,6 +30,7 @@ export default function Comment({ reviewId, onCommentAdded, comments }: CommentP
   const [localComments, setLocalComments] = useState(comments);
   const [pseudonymMap, setPseudonymMap] = useState<Record<string, string>>({}); // cache pseudonyms
   const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [showGuidelines, setShowGuidelines] = useState(false);
 
   // Update local comments when props change
   useEffect(() => {
@@ -111,6 +112,24 @@ export default function Comment({ reviewId, onCommentAdded, comments }: CommentP
     e.preventDefault();
     if (!newComment.trim()) return;
 
+    // Validate minimum length
+    const minLength = 20;
+    if (newComment.trim().length < minLength) {
+      setError(`Comments must be at least ${minLength} characters to ensure they add value to the discussion.`);
+      return;
+    }
+
+    // Check for low-effort comments (optional - can be adjusted)
+    const lowEffortPatterns = [
+      /^(thanks|nice|good|great|ok|okay|lol|wow|cool|awesome|agreed?|same|this|\+1|^\d+$)\s*!*$/i,
+      /^(.)\1{10,}$/, // Repeated characters
+    ];
+    
+    if (lowEffortPatterns.some(pattern => pattern.test(newComment.trim()))) {
+      setError('Please provide a more detailed comment that adds substance to the discussion.');
+      return;
+    }
+
     setIsSubmitting(true);
     setError(null);
 
@@ -179,7 +198,7 @@ export default function Comment({ reviewId, onCommentAdded, comments }: CommentP
               <div>
                 {/* Pseudonym links to profile */}
                 <Link
-                  href={`/profile/${comment.userId}`}
+                  href={comment.userId === auth.currentUser?.uid ? '/profile' : `/profile/${comment.userId}`}
                   className="font-semibold text-[#3D348B] hover:underline"
                 >
                   {pseudonymMap[comment.userId] || "AnonymousUser"}
@@ -225,20 +244,37 @@ export default function Comment({ reviewId, onCommentAdded, comments }: CommentP
 
       {/* New Comment Form */}
       <form onSubmit={handleSubmitComment} className="space-y-2">
+        {showGuidelines && (
+          <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 text-xs text-gray-700">
+            <p className="font-semibold text-blue-900 mb-1">💡 What makes a helpful comment?</p>
+            <ul className="list-disc list-inside space-y-0.5 text-blue-800">
+              <li>Share specific insights or personal experiences</li>
+              <li>Ask thoughtful questions or offer constructive feedback</li>
+              <li>Add context that helps others understand the review better</li>
+            </ul>
+          </div>
+        )}
         {error && (
           <div className="p-3 bg-red-50 border border-red-200 rounded-lg text-sm text-red-700">
             {error}
           </div>
         )}
-        <textarea
-          value={newComment}
-          onChange={(e) => setNewComment(e.target.value)}
-          placeholder="Add a comment..."
-          className="w-full p-2 border rounded-lg text-sm resize-none"
-          rows={2}
-        />
+        <div className="relative">
+          <textarea
+            value={newComment}
+            onChange={(e) => setNewComment(e.target.value)}
+            onFocus={() => setShowGuidelines(true)}
+            onBlur={() => setShowGuidelines(false)}
+            placeholder="Share your thoughts or experiences related to this review... (minimum 20 characters)"
+            className="w-full p-2 border rounded-lg text-sm resize-none"
+            rows={3}
+          />
+          <div className="text-xs text-gray-500 mt-1">
+            {newComment.length}/20 characters minimum
+          </div>
+        </div>
         <Button
-          disabled={isSubmitting || !newComment.trim()}
+          disabled={isSubmitting || !newComment.trim() || newComment.trim().length < 20}
           style={{ backgroundColor: "#3D348B" }}
         >
           {isSubmitting ? 'Posting...' : 'Post Comment'}

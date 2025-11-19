@@ -58,8 +58,7 @@ export default function Navbar() {
 
         {/* Desktop Navigation */}
         <nav className="hidden md:flex gap-8 text-sm items-center">
-          <Link href="/#companies" className="text-gray-700 hover:text-[#3D348B] transition font-medium">Companies</Link>
-          <Link href="/#rankings" className="text-gray-700 hover:text-[#3D348B] transition font-medium">Rankings</Link>
+          <Link href="/companies" className="text-gray-700 hover:text-[#3D348B] transition font-medium">Companies</Link>
           <Link href="/#how" className="text-gray-700 hover:text-[#3D348B] transition font-medium">How it works</Link>
           <Link href="/#contact" className="text-gray-700 hover:text-[#3D348B] transition font-medium">Contact</Link>
 
@@ -124,18 +123,11 @@ export default function Navbar() {
         <div className="md:hidden border-t border-gray-200 bg-white">
           <nav className="flex flex-col px-8 py-4 gap-3">
             <Link 
-              href="/#companies" 
+              href="/companies" 
               onClick={() => setIsMobileMenuOpen(false)}
               className="text-gray-700 hover:text-[#3D348B] transition font-medium py-2"
             >
               Companies
-            </Link>
-            <Link 
-              href="/#rankings" 
-              onClick={() => setIsMobileMenuOpen(false)}
-              className="text-gray-700 hover:text-[#3D348B] transition font-medium py-2"
-            >
-              Rankings
             </Link>
             <Link 
               href="/#how" 

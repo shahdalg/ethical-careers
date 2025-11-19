@@ -9,12 +9,14 @@ import { db, auth } from "@/lib/firebase";
 import { collection, query, where, getDocs, doc, getDoc, updateDoc, arrayUnion, arrayRemove, increment, deleteDoc } from "firebase/firestore";
 import { getUserSurveyData, needsPreSurvey } from "@/lib/surveyHelpers";
 import { onAuthStateChanged } from "firebase/auth";
+import { formatCompanyName } from "@/lib/formatCompanyName";
 
 interface Review {
   id: string;
   pseudonym?: string;
   authorId?: string; // Add this for profile linking
   selfIdentify: string;
+  positionDetails?: string;
   overallText?: string;
   peopleText: string;
   peopleRating: number;
@@ -25,6 +27,7 @@ interface Review {
   recommend: string;
   references: string;
   createdAt: any;
+  updatedAt?: any;
   likes?: number;
   likedBy?: string[];
 }
@@ -381,7 +384,7 @@ export default function CompanyPage() {
                     {/* Pseudonym with link to profile */}
                     {review.authorId ? (
                       <Link 
-                        href={`/profile/${review.authorId}`}
+                        href={review.authorId === userId ? '/profile' : `/profile/${review.authorId}`}
                         className="font-semibold text-[#3D348B] hover:underline"
                       >
                         {review.pseudonym || "AnonymousUser"}
@@ -391,13 +394,18 @@ export default function CompanyPage() {
                         {review.pseudonym || "AnonymousUser"}
                       </p>
                     )}
-                    <span className="text-sm text-gray-600">
+                    <span className="text-sm text-gray-600 ml-2">
                       {review.selfIdentify === 'currentlyWork'
                         ? 'Current Employee'
                         : review.selfIdentify === 'usedToWork'
                           ? 'Former Employee'
                           : 'External Reviewer'}
                     </span>
+                    {review.positionDetails && (
+                      <p className="text-xs text-gray-500 mt-1 italic">
+                        {review.positionDetails}
+                      </p>
+                    )}
                     <div className="mt-1">
                       <RatingDisplay
                         rating={
@@ -411,6 +419,11 @@ export default function CompanyPage() {
                   </div>
                   <span className="text-sm text-gray-600">
                     {new Date(review.createdAt.toDate()).toLocaleDateString()}
+                    {review.updatedAt && (
+                      <span className="text-xs text-gray-500 ml-2">
+                        (Edited: {new Date(review.updatedAt.toDate()).toLocaleDateString()})
+                      </span>
+                    )}
                   </span>
                 </div>
 

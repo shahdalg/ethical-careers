@@ -3,6 +3,7 @@ import { useState } from "react";
 import { doc, setDoc, getDoc, serverTimestamp } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import Link from "next/link";
+import { formatCompanyName } from "@/lib/formatCompanyName";
 
 interface PostCompanySurveyModalProps {
   userId: string;
@@ -105,7 +106,7 @@ export default function PostCompanySurveyModal({
           <div className="flex justify-between items-start">
             <div>
               <h2 className="text-2xl font-bold" style={{ color: "#3D348B" }}>
-                Post-Company Survey: {companyName}
+                Post-Company Survey: {formatCompanyName(companyName)}
               </h2>
               <p className="text-sm text-gray-600 mt-2">
                 It's been 7 days since you first viewed this company. Please provide your feedback.
@@ -115,7 +116,7 @@ export default function PostCompanySurveyModal({
                 className="text-sm text-blue-600 hover:underline mt-1 inline-block"
                 target="_blank"
               >
-                View {companyName}'s page →
+                View {formatCompanyName(companyName)}'s page →
               </Link>
             </div>
             <button
@@ -144,7 +145,7 @@ export default function PostCompanySurveyModal({
 
           <div className="border-t pt-4">
             <h3 className="font-semibold text-lg mb-4" style={{ color: "#3D348B" }}>
-              About {companyName}
+              About {formatCompanyName(companyName)}
             </h3>
 
             {/* Overall Ethical Rating */}

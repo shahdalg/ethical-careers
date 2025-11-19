@@ -22,6 +22,7 @@ import {
   deleteDoc,
 } from "firebase/firestore";
 import { auth, db } from "@/lib/firebase";
+import { formatCompanyName } from "@/lib/formatCompanyName";
 
 type Post = {
   id: string;
@@ -34,6 +35,7 @@ type Post = {
   companySlug?: string;
   // Review fields
   selfIdentify?: string;
+  positionDetails?: string;
   peopleText?: string;
   peopleRating?: number;
   planetText?: string;
@@ -343,6 +345,7 @@ export default function ProfilePage() {
                 {posts.map((p) => {
                   // Determine if this is a review (has review fields) or a regular post
                   const isReview = p.peopleText || p.planetText || p.transparencyText;
+                  const displayCompanyName = formatCompanyName(p.companyName);
                   const reviewPreview = [
                     p.peopleText,
                     p.planetText,
@@ -356,13 +359,13 @@ export default function ProfilePage() {
                     >
                       <div className="flex items-center justify-between gap-3">
                         <h3 className="text-lg font-semibold text-gray-900">
-                          {isReview ? `Review: ${p.companyName || 'Company'}` : (p.title || "Untitled Post")}
+                          {isReview ? `Review: ${displayCompanyName}` : (p.title || "Untitled Post")}
                         </h3>
                         <span className="text-xs text-gray-500">{fmt(p.createdAt)}</span>
                       </div>
                       {p.companyName && (
                         <p className="mt-1 text-sm text-[#3D348B]">
-                          Company: {p.companyName}
+                          Company: {displayCompanyName}
                         </p>
                       )}
                       {isReview && p.selfIdentify && (

@@ -15,6 +15,7 @@ import {
   limit,
 } from "firebase/firestore";
 import { db } from "@/lib/firebase";
+import { formatCompanyName } from "@/lib/formatCompanyName";
 
 type Post = {
   id: string;
@@ -22,6 +23,7 @@ type Post = {
   companyName?: string;
   companySlug?: string;
   selfIdentify?: string;
+  positionDetails?: string;
   peopleText?: string;
   peopleRating?: number;
   planetText?: string;
@@ -134,7 +136,7 @@ export default function PublicProfilePage() {
                         href={link}
                         className="font-semibold text-[#3D348B] hover:underline"
                       >
-                        {post.companyName || "Unknown Company"}
+                        {formatCompanyName(post.companyName)}
                       </Link>
                       {post.selfIdentify && (
                         <p className="text-xs text-gray-600 italic mt-1">

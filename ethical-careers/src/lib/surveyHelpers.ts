@@ -8,7 +8,6 @@ export interface CompanySurveyStatus {
 }
 
 export interface UserSurveyData {
-  submittedInitialSurvey: boolean;
   companySurveys: Record<string, CompanySurveyStatus>;
   firstCompanyVisitDate: any;
   submittedGlobalPostSurvey?: boolean;
@@ -24,7 +23,6 @@ export async function getUserSurveyData(userId: string): Promise<UserSurveyData 
 
     const data = userDoc.data();
     return {
-      submittedInitialSurvey: data.submittedInitialSurvey || false,
       companySurveys: data.companySurveys || {},
       firstCompanyVisitDate: data.firstCompanyVisitDate || null,
       submittedGlobalPostSurvey: data.submittedGlobalPostSurvey || false,

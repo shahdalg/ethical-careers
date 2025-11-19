@@ -3,8 +3,9 @@
 import { useState, useEffect } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { db, auth } from "@/lib/firebase"; // adjust path if needed
-import { collection, addDoc, Timestamp, doc, getDoc } from "firebase/firestore";
+import { collection, addDoc, Timestamp, doc, getDoc, query, where, getDocs, updateDoc } from "firebase/firestore";
 import { onAuthStateChanged } from "firebase/auth";
+import { formatCompanyName } from "@/lib/formatCompanyName";
 
 export default function CompanyReviewForm() {
   const router = useRouter();
@@ -14,9 +15,12 @@ export default function CompanyReviewForm() {
   const [userEmail, setUserEmail] = useState<string | null>(null);
   const [userPseudonym, setUserPseudonym] = useState<string | null>(null);
   const [showExample, setShowExample] = useState<boolean>(false);
+  const [existingReviewId, setExistingReviewId] = useState<string | null>(null);
+  const [isEditMode, setIsEditMode] = useState(false);
 
   // Self Identify 4
   const [selfIdentify, setSelfIdentify] = useState("");
+  const [positionDetails, setPositionDetails] = useState("");
 
   // People
   const [peopleText, setPeopleText] = useState("");
@@ -39,6 +43,8 @@ export default function CompanyReviewForm() {
   // References
   const [RefText, setRefText] = useState("");
   const [error, setError] = useState<string | null>(null);
+  const [showSuccessModal, setShowSuccessModal] = useState(false);
+  const [isUpdate, setIsUpdate] = useState(false);
 
   // Fetch proper company name from Firestore
   useEffect(() => {
@@ -51,14 +57,16 @@ export default function CompanyReviewForm() {
         const companyDoc = await getDoc(companyDocRef);
         
         if (companyDoc.exists()) {
-          setCompanyName(companyDoc.data().name);
+          setCompanyName(formatCompanyName(companyDoc.data().name));
         } else {
           // Fallback to decoded slug with hyphens replaced
-          setCompanyName(decodeURIComponent(companySlug).replace(/-/g, " "));
+          const fallbackName = decodeURIComponent(companySlug).replace(/-/g, " ");
+          setCompanyName(formatCompanyName(fallbackName));
         }
       } catch (err) {
         console.error("Error fetching company name:", err);
-        setCompanyName(decodeURIComponent(company.toString()).replace(/-/g, " "));
+        const fallbackName = decodeURIComponent(company.toString()).replace(/-/g, " ");
+        setCompanyName(formatCompanyName(fallbackName));
       }
     };
     
@@ -89,6 +97,46 @@ export default function CompanyReviewForm() {
     });
     return () => unsubscribe();
   }, [router]);
+
+  // Check for existing review and load it if found
+  useEffect(() => {
+    const checkExistingReview = async () => {
+      if (!userId || !companyName) return;
+
+      try {
+        const reviewsQuery = query(
+          collection(db, "posts"),
+          where("authorId", "==", userId),
+          where("companyName", "==", companyName)
+        );
+        const snapshot = await getDocs(reviewsQuery);
+
+        if (!snapshot.empty) {
+          const existingReview = snapshot.docs[0];
+          const data = existingReview.data();
+          
+          // Load existing review data
+          setExistingReviewId(existingReview.id);
+          setIsEditMode(true);
+          setSelfIdentify(data.selfIdentify || "");
+          setPositionDetails(data.positionDetails || "");
+          setPeopleText(data.peopleText || "");
+          setPeopleRating(data.peopleRating?.toString() || "");
+          setPlanetText(data.planetText || "");
+          setPlanetRating(data.planetRating?.toString() || "");
+          setTransparencyText(data.transparencyText || "");
+          setTransparencyRating(data.transparencyRating?.toString() || "");
+          setOverallText(data.overallText || "");
+          setRecommend(data.recommend || "");
+          setRefText(data.references || "");
+        }
+      } catch (error) {
+        console.error("Error checking for existing review:", error);
+      }
+    };
+
+    checkExistingReview();
+  }, [userId, companyName]);
 
   // Helper function to check text with Perspective API
   const checkTextModeration = async (text: string): Promise<boolean> => {
@@ -141,36 +189,61 @@ export default function CompanyReviewForm() {
         }
       }
 
-      // If all checks pass, submit the review
-      await addDoc(collection(db, "posts"), {
-        // User information
-        authorId: userId,
-        authorEmail: userEmail,
-        pseudonym: userPseudonym,
-        // Store both slug and name for robust querying
-        companyName: companyName,
-        companySlug: company?.toString() || "",
-        // Keep legacy field for backward compatibility
-        company: companyName,
-        overallText,
-        selfIdentify,
-        peopleText,
-        peopleRating: Number(peopleRating) || null,
-        planetText,
-        planetRating: Number(planetRating) || null,
-        transparencyText,
-        transparencyRating: Number(transparencyRating) || null,
-        recommend,
-        references: RefText,
-        createdAt: Timestamp.now(),
-      });
+      // If editing existing review, update it
+      if (isEditMode && existingReviewId) {
+        await updateDoc(doc(db, "posts", existingReviewId), {
+          overallText,
+          selfIdentify,
+          positionDetails,
+          peopleText,
+          peopleRating: Number(peopleRating) || null,
+          planetText,
+          planetRating: Number(planetRating) || null,
+          transparencyText,
+          transparencyRating: Number(transparencyRating) || null,
+          recommend,
+          references: RefText,
+          updatedAt: Timestamp.now(),
+        });
 
-      alert("Review submitted!");
-      router.push(`/companies/${company}`); // redirect back to company page
+        setIsUpdate(true);
+        setShowSuccessModal(true);
+      } else {
+        // If all checks pass, submit new review
+        await addDoc(collection(db, "posts"), {
+          // User information
+          authorId: userId,
+          authorEmail: userEmail,
+          pseudonym: userPseudonym,
+          // Store both slug and name for robust querying
+          companyName: companyName,
+          companySlug: company?.toString() || "",
+          overallText,
+          selfIdentify,
+          positionDetails,
+          peopleText,
+          peopleRating: Number(peopleRating) || null,
+          planetText,
+          planetRating: Number(planetRating) || null,
+          transparencyText,
+          transparencyRating: Number(transparencyRating) || null,
+          recommend,
+          references: RefText,
+          createdAt: Timestamp.now(),
+        });
+
+        setIsUpdate(false);
+        setShowSuccessModal(true);
+      }
     } catch (err) {
       console.error(err);
       alert("Error submitting review");
     }
+  };
+
+  const handleCloseSuccessModal = () => {
+    setShowSuccessModal(false);
+    router.push(`/companies/${company}`);
   };
 
   // Rating Radios
@@ -227,11 +300,69 @@ export default function CompanyReviewForm() {
 
   return (
     <main className="bg-gray-50 text-gray-800 min-h-screen">
+      {/* Success Modal */}
+      {showSuccessModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          {/* Confetti */}
+          <div className="fixed inset-0 pointer-events-none overflow-hidden">
+            {[...Array(50)].map((_, i) => (
+              <div
+                key={i}
+                className="absolute w-2 h-2 opacity-0"
+                style={{
+                  left: `${Math.random() * 100}%`,
+                  top: '-10px',
+                  backgroundColor: ['#3D348B', '#7678ED', '#44AF69', '#F77F00', '#FCA311'][Math.floor(Math.random() * 5)],
+                  animation: `confetti-fall ${2 + Math.random() * 3}s linear forwards`,
+                  animationDelay: `${Math.random() * 0.5}s`,
+                  transform: `rotate(${Math.random() * 360}deg)`,
+                }}
+              />
+            ))}
+          </div>
+          
+          <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full p-8 text-center animate-fade-in relative z-10">
+            <div className="text-6xl mb-4">🌟</div>
+            <h2 className="text-2xl font-bold text-[#3D348B] mb-3">
+              {isUpdate ? "Review Updated!" : "Thank You for Your Contribution!"}
+            </h2>
+            <p className="text-gray-700 mb-2">
+              {isUpdate 
+                ? "Your updated insights help keep our community informed with the latest information."
+                : "Your review is now live and helping others make more informed, ethical career decisions."}
+            </p>
+            <p className="text-sm text-gray-600 mb-6">
+              By sharing your experience, you're building a more transparent workplace community. 
+              Every review matters in creating a better future of work. 💚
+            </p>
+            <button
+              onClick={handleCloseSuccessModal}
+              className="bg-[#3D348B] text-white px-6 py-3 rounded-lg font-semibold hover:bg-[#2E256E] transition-colors w-full"
+            >
+              View All Reviews
+            </button>
+          </div>
+          
+          <style jsx>{`
+            @keyframes confetti-fall {
+              to {
+                transform: translateY(100vh) rotate(720deg);
+                opacity: 1;
+              }
+            }
+          `}</style>
+        </div>
+      )}
 
       <div className="p-8 flex flex-col items-center">
         <h1 className="text-2xl font-bold mb-6" style={{ color: "#3D348B" }}>
-          Submit a Review for {companyName || "Loading..."}
+          {isEditMode ? "Edit Your Review for" : "Submit a Review for"} {companyName || "Loading..."}
         </h1>
+        {isEditMode && (
+          <p className="text-sm text-gray-600 mb-4">
+            You have already submitted a review for this company. You can edit it below.
+          </p>
+        )}
 
         {/* Example guidance (read-only, not part of the form, won't affect numbers) */}
                 {/* Example guidance (read-only, not part of the form, won't affect numbers) */}
@@ -306,6 +437,25 @@ export default function CompanyReviewForm() {
                 <option value="usedToWork">I used to work here</option>
                 <option value="neverWorked">I have never worked here</option>
               </select>
+            </label>
+            
+            <label className="block mt-3 text-sm">
+              {selfIdentify === "currentlyWork" || selfIdentify === "usedToWork" 
+                ? "Please describe your position/role (e.g., Software Engineer, Marketing Manager, Intern)" 
+                : selfIdentify === "neverWorked"
+                ? "Why are you reviewing this company? (e.g., applied here, researching employers, heard about their practices)"
+                : "Additional details (optional)"}
+              <textarea
+                value={positionDetails}
+                onChange={(e) => setPositionDetails(e.target.value)}
+                className="w-full border border-gray-300 p-2 rounded mt-1 focus:outline-none focus:ring-2 focus:ring-[#44AF69]"
+                rows={2}
+                placeholder={selfIdentify === "currentlyWork" || selfIdentify === "usedToWork" 
+                  ? "e.g., Senior Data Analyst, worked in Product team" 
+                  : selfIdentify === "neverWorked"
+                  ? "e.g., I applied here and want to share what I learned during the process"
+                  : ""}
+              />
             </label>
           </section>
 

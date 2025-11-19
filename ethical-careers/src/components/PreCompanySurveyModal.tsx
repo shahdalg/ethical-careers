@@ -2,6 +2,7 @@
 import { useState } from "react";
 import { doc, setDoc, getDoc, serverTimestamp } from "firebase/firestore";
 import { db } from "@/lib/firebase";
+import { formatCompanyName } from "@/lib/formatCompanyName";
 
 interface PreCompanySurveyModalProps {
   userId: string;
@@ -85,7 +86,7 @@ export default function PreCompanySurveyModal({
       <div className="bg-white rounded-lg shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
         <div className="sticky top-0 bg-white border-b p-6">
           <h2 className="text-2xl font-bold" style={{ color: "#3D348B" }}>
-            Before You View: {companyName}
+            Before You View: {formatCompanyName(companyName)}
           </h2>
           <p className="text-sm text-gray-600 mt-2">
             Please take a moment to answer the following two questions about this company. The information you provide will be used solely for internal data collection purposes and will not be shared externally.
