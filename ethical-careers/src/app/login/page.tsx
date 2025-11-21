@@ -69,27 +69,27 @@ function LoginContent() {
         onSubmit={handleSubmit}
         className="flex flex-col gap-4 border p-6 rounded-lg shadow w-80"
       >
-        <h2 className="text-2xl font-semibold text-center mb-2">Login</h2>
+        <h2 className="text-2xl font-semibold text-center mb-2 text-gray-900">Login</h2>
 
-        <label className="flex flex-col">
+        <label className="flex flex-col text-gray-800 font-medium">
           Email:
           <input
             type="email"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             required
-            className="border p-2 rounded"
+            className="border p-2 rounded mt-1"
           />
         </label>
 
-        <label className="flex flex-col">
+        <label className="flex flex-col text-gray-800 font-medium">
           Password:
           <input
             type="password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             required
-            className="border p-2 rounded"
+            className="border p-2 rounded mt-1"
           />
         </label>
 
@@ -98,7 +98,7 @@ function LoginContent() {
         <button
           type="button"
           onClick={() => setShowForgotPassword(true)}
-          className="text-sm text-blue-600 hover:underline text-left -mt-2"
+          className="text-sm text-[#3D348B] hover:underline text-left -mt-2 font-medium"
         >
           Forgot password?
         </button>
@@ -117,9 +117,9 @@ function LoginContent() {
           {loading ? "Signing in..." : "Login"}
         </button>
 
-        <p className="text-sm text-center mt-2">
+        <p className="text-sm text-center mt-2 text-gray-800">
           Don't have an account?{" "}
-          <a href="/signup" className="text-blue-600 hover:underline">
+          <a href="/signup" className="text-[#3D348B] hover:underline font-semibold">
             Click here
           </a>
         </p>
