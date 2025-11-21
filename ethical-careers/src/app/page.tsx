@@ -13,13 +13,18 @@ const Home = () => {
 
   // Track auth state
   const [user, setUser] = useState<User | null>(auth.currentUser);
-  useEffect(() => {
-    const unsub = onAuthStateChanged(auth, (u) => setUser(u));
-    return () => unsub();
-  }, []);
-
-  // router for client-side navigation
   const router = useRouter();
+  
+  useEffect(() => {
+    const unsub = onAuthStateChanged(auth, (u) => {
+      setUser(u);
+      // Redirect to login if not authenticated
+      if (!u) {
+        router.push('/login');
+      }
+    });
+    return () => unsub();
+  }, [router]);
   const [showGlobalPost, setShowGlobalPost] = useState(false);
   const [userId, setUserId] = useState<string | null>(null);
 

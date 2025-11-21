@@ -62,16 +62,6 @@ export default function Navbar() {
           <Link href="/#how" className="text-gray-700 hover:text-[#3D348B] transition font-medium">How it works</Link>
           <Link href="/#contact" className="text-gray-700 hover:text-[#3D348B] transition font-medium">Contact</Link>
 
-          {/* Auth controls */}
-          {!loading && !user && (
-            <Link
-              href="/login"
-              className="bg-[#7678ED] text-white px-4 py-2 rounded-md shadow-md hover:brightness-110 transition"
-            >
-              Login
-            </Link>
-          )}
-
           {!loading && user && (
             <div className="relative" ref={dropdownRef}>
               <button
@@ -143,16 +133,6 @@ export default function Navbar() {
             >
               Contact
             </Link>
-
-            {!loading && !user && (
-              <Link
-                href="/login"
-                onClick={() => setIsMobileMenuOpen(false)}
-                className="bg-[#7678ED] text-white px-4 py-2 rounded-md shadow-md hover:brightness-110 transition text-center mt-2"
-              >
-                Login
-              </Link>
-            )}
 
             {!loading && user && (
               <>

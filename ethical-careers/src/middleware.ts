@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 
 // Add any public routes that don't require authentication
-const publicRoutes = ['/login', '/signup', '/']; // Added home page to public routes
+const publicRoutes = ['/login', '/signup', '/thank-you', '/signup/survey'];
 
 // Add paths that should always be accessible
 const publicPaths = [
