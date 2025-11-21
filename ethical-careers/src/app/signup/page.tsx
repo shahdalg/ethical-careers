@@ -89,7 +89,8 @@ export default function SignupPage() {
           createdAt: serverTimestamp(),
           updatedAt: serverTimestamp(),
           companySurveys: {},
-          firstCompanyVisitDate: null,
+          signupDate: serverTimestamp(),
+          submittedInitialSurvey: false,
         },
         { merge: true }
       );
@@ -132,7 +133,7 @@ await sendEmailVerification(user, {
       await current.reload();
 
       if (current.emailVerified) {
-        router.push("/");
+        router.push(`/signup/survey?userId=${current.uid}`);
       } else {
         setVerificationError(
           "We haven’t detected verification yet. Please click the link in your email, then try again."

@@ -9,8 +9,9 @@ export interface CompanySurveyStatus {
 
 export interface UserSurveyData {
   companySurveys: Record<string, CompanySurveyStatus>;
-  firstCompanyVisitDate: any;
+  signupDate: any;
   submittedGlobalPostSurvey?: boolean;
+  submittedInitialSurvey?: boolean;
 }
 
 /**
@@ -24,8 +25,9 @@ export async function getUserSurveyData(userId: string): Promise<UserSurveyData 
     const data = userDoc.data();
     return {
       companySurveys: data.companySurveys || {},
-      firstCompanyVisitDate: data.firstCompanyVisitDate || null,
+      signupDate: data.signupDate || null,
       submittedGlobalPostSurvey: data.submittedGlobalPostSurvey || false,
+      submittedInitialSurvey: data.submittedInitialSurvey || false,
     };
   } catch (error) {
     console.error("Error fetching user survey data:", error);
@@ -47,7 +49,7 @@ export function needsPreSurvey(
 }
 
 /**
- * Global post-survey logic: trigger once after firstCompanyVisitDate passes threshold
+ * Global post-survey logic: trigger once after signupDate passes threshold
  * and user hasn't submitted the global post-survey.
  */
 export function needsGlobalPostSurvey(
@@ -55,26 +57,26 @@ export function needsGlobalPostSurvey(
 ): boolean {
   if (!surveyData) return false;
   if (surveyData.submittedGlobalPostSurvey) return false;
-  if (!surveyData.firstCompanyVisitDate) return false;
+  if (!surveyData.signupDate) return false;
 
   // Handle Firestore Timestamp conversion
-  let firstVisit: Date;
-  if (surveyData.firstCompanyVisitDate.toDate) {
+  let signupTime: Date;
+  if (surveyData.signupDate.toDate) {
     // It's a Firestore Timestamp
-    firstVisit = surveyData.firstCompanyVisitDate.toDate();
-  } else if (surveyData.firstCompanyVisitDate.seconds) {
+    signupTime = surveyData.signupDate.toDate();
+  } else if (surveyData.signupDate.seconds) {
     // It's a Timestamp-like object with seconds
-    firstVisit = new Date(surveyData.firstCompanyVisitDate.seconds * 1000);
+    signupTime = new Date(surveyData.signupDate.seconds * 1000);
   } else {
     // Try converting directly
-    firstVisit = new Date(surveyData.firstCompanyVisitDate);
+    signupTime = new Date(surveyData.signupDate);
   }
 
   const now = new Date();
-  const daysSince = (now.getTime() - firstVisit.getTime()) / (1000 * 60 * 60 * 24);
+  const daysSince = (now.getTime() - signupTime.getTime()) / (1000 * 60 * 60 * 24);
   
   console.log('Global post-survey check:', {
-    firstVisit: firstVisit.toISOString(),
+    signupTime: signupTime.toISOString(),
     daysSince,
     threshold: 0.001,
     shouldShow: daysSince >= 0.001

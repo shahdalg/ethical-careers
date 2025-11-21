@@ -109,8 +109,8 @@ export default function GlobalPostSurveyModal({ userId, onComplete, onDismiss }:
       <div className="bg-white rounded-lg shadow-xl max-w-3xl w-full max-h-[90vh] overflow-y-auto">
         <div className="sticky top-0 bg-white border-b p-6 z-10 flex justify-between">
           <div>
-            <h2 className="text-2xl font-bold" style={{ color: "#3D348B" }}>Global Post Survey</h2>
-            <p className="text-sm text-gray-600 mt-2">It's been 7 days since you first viewed a company page. Please provide your feedback about each company page you've visited.</p>
+            <h2 className="text-2xl font-bold" style={{ color: "#3D348B" }}>One Week Reflection</h2>
+            <p className="text-sm text-gray-600 mt-2">It's been 7 days since you signed up. Please share your current perspectives.</p>
           </div>
           <button onClick={onDismiss} className="text-gray-500 hover:text-gray-700 text-2xl">×</button>
         </div>

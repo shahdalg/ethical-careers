@@ -43,7 +43,6 @@ export default function NewCompanyPage() {
           userDocRef,
           {
             companySurveys,
-            firstCompanyVisitDate: currentData.firstCompanyVisitDate || serverTimestamp(),
             updatedAt: serverTimestamp(),
           },
           { merge: true }
@@ -53,9 +52,14 @@ export default function NewCompanyPage() {
       alert("Company added successfully!");
       // Redirect user to that company's review page
       router.push(`/companies/${slug}/review`);
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error adding company:", error);
-      alert("There was an error adding the company.");
+      // Show specific error message if it's a duplicate
+      if (error.message && error.message.includes("already exists")) {
+        alert(error.message);
+      } else {
+        alert("There was an error adding the company.");
+      }
     } finally {
       setLoading(false);
     }

@@ -65,7 +65,6 @@ export default function PreCompanySurveyModal({
         userDocRef,
         {
           companySurveys,
-          firstCompanyVisitDate: currentData.firstCompanyVisitDate || serverTimestamp(),
           updatedAt: serverTimestamp(),
         },
         { merge: true }
