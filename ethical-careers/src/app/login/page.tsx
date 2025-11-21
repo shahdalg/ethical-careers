@@ -64,62 +64,55 @@ function LoginContent() {
   };
 
   return (
-    <main className="flex flex-col items-center justify-center min-h-screen">
+    <main className="flex flex-col items-center justify-center min-h-screen bg-gray-50 dark:bg-gray-900">
       <form
         onSubmit={handleSubmit}
-        className="flex flex-col gap-4 border p-6 rounded-lg shadow w-80"
+        className="flex flex-col gap-4 border border-gray-200 dark:border-gray-700 p-6 rounded-lg shadow-lg bg-white dark:bg-gray-800 w-80"
       >
-        <h2 className="text-2xl font-semibold text-center mb-2 text-gray-900">Login</h2>
+        <h2 className="text-2xl font-semibold text-center mb-2 text-gray-900 dark:text-gray-100">Login</h2>
 
-        <label className="flex flex-col text-gray-800 font-medium">
+        <label className="flex flex-col text-gray-800 dark:text-gray-200 font-medium">
           Email:
           <input
             type="email"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             required
-            className="border p-2 rounded mt-1"
+            className="border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 p-2 rounded mt-1 focus:ring-2 focus:ring-[#3D348B] dark:focus:ring-[#7678ED] outline-none"
           />
         </label>
 
-        <label className="flex flex-col text-gray-800 font-medium">
+        <label className="flex flex-col text-gray-800 dark:text-gray-200 font-medium">
           Password:
           <input
             type="password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             required
-            className="border p-2 rounded mt-1"
+            className="border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 p-2 rounded mt-1 focus:ring-2 focus:ring-[#3D348B] dark:focus:ring-[#7678ED] outline-none"
           />
         </label>
 
-        {error && <p className="text-sm text-red-600 -mt-2">{error}</p>}
+        {error && <p className="text-sm text-red-600 dark:text-red-400 -mt-2">{error}</p>}
 
         <button
           type="button"
           onClick={() => setShowForgotPassword(true)}
-          className="text-sm text-[#3D348B] hover:underline text-left -mt-2 font-medium"
+          className="text-sm text-[#3D348B] dark:text-[#7678ED] hover:underline text-left -mt-2 font-medium"
         >
           Forgot password?
         </button>
 
         <button
           type="submit"
-          className="text-white font-semibold py-2 px-4 rounded transition-colors"
-          style={{ backgroundColor: "#3D348B" }}
-          onMouseEnter={(e) =>
-            (e.currentTarget.style.backgroundColor = "#2E256E")
-          }
-          onMouseLeave={(e) =>
-            (e.currentTarget.style.backgroundColor = "#5E4BB8")
-          }
+          className="text-white font-semibold py-2 px-4 rounded transition-colors bg-[#3D348B] hover:bg-[#2E256E] dark:bg-[#7678ED] dark:hover:bg-[#5E4BB8]"
         >
           {loading ? "Signing in..." : "Login"}
         </button>
 
-        <p className="text-sm text-center mt-2 text-gray-800">
+        <p className="text-sm text-center mt-2 text-gray-800 dark:text-gray-200">
           Don't have an account?{" "}
-          <a href="/signup" className="text-[#3D348B] hover:underline font-semibold">
+          <a href="/signup" className="text-[#3D348B] dark:text-[#7678ED] hover:underline font-semibold">
             Click here
           </a>
         </p>
@@ -127,10 +120,10 @@ function LoginContent() {
 
       {/* Forgot Password Modal */}
       {showForgotPassword && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg shadow-xl p-6 w-96 max-w-[90vw]">
+        <div className="fixed inset-0 bg-black bg-opacity-50 dark:bg-opacity-70 flex items-center justify-center z-50">
+          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl p-6 w-96 max-w-[90vw]">
             <div className="flex justify-between items-center mb-4">
-              <h3 className="text-xl font-semibold">Reset Password</h3>
+              <h3 className="text-xl font-semibold text-gray-900 dark:text-gray-100">Reset Password</h3>
               <button
                 onClick={() => {
                   setShowForgotPassword(false);
@@ -138,7 +131,7 @@ function LoginContent() {
                   setResetSuccess(false);
                   setResetEmail("");
                 }}
-                className="text-gray-500 hover:text-gray-700 text-2xl"
+                className="text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 text-2xl"
               >
                 ×
               </button>
@@ -146,8 +139,8 @@ function LoginContent() {
 
             {resetSuccess ? (
               <div className="text-center py-4">
-                <div className="text-green-600 text-5xl mb-3">✓</div>
-                <p className="text-gray-700 mb-4">
+                <div className="text-green-600 dark:text-green-400 text-5xl mb-3">✓</div>
+                <p className="text-gray-700 dark:text-gray-300 mb-4">
                   Password reset email sent! Check your inbox for instructions (including your spam folder). 
                 </p>
                 <button
@@ -156,32 +149,31 @@ function LoginContent() {
                     setResetSuccess(false);
                     setResetEmail("");
                   }}
-                  className="text-white font-semibold py-2 px-6 rounded"
-                  style={{ backgroundColor: "#3D348B" }}
+                  className="text-white font-semibold py-2 px-6 rounded bg-[#3D348B] hover:bg-[#2E256E] dark:bg-[#7678ED] dark:hover:bg-[#5E4BB8]"
                 >
                   Close
                 </button>
               </div>
             ) : (
               <form onSubmit={handleForgotPassword} className="flex flex-col gap-4">
-                <p className="text-sm text-gray-600">
+                <p className="text-sm text-gray-600 dark:text-gray-400">
                   Enter your email address and we'll send you a link to reset your password.
                 </p>
 
-                <label className="flex flex-col">
+                <label className="flex flex-col text-gray-800 dark:text-gray-200 font-medium">
                   Email:
                   <input
                     type="email"
                     value={resetEmail}
                     onChange={(e) => setResetEmail(e.target.value)}
                     required
-                    className="border p-2 rounded mt-1"
+                    className="border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 p-2 rounded mt-1 focus:ring-2 focus:ring-[#3D348B] dark:focus:ring-[#7678ED] outline-none"
                     placeholder="your@email.com"
                   />
                 </label>
 
                 {resetError && (
-                  <p className="text-sm text-red-600 -mt-2">{resetError}</p>
+                  <p className="text-sm text-red-600 dark:text-red-400 -mt-2">{resetError}</p>
                 )}
 
                 <div className="flex gap-3">
@@ -192,15 +184,14 @@ function LoginContent() {
                       setResetError(null);
                       setResetEmail("");
                     }}
-                    className="flex-1 border border-gray-300 text-gray-700 font-semibold py-2 px-4 rounded hover:bg-gray-50"
+                    className="flex-1 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-700 font-semibold py-2 px-4 rounded hover:bg-gray-50 dark:hover:bg-gray-600"
                   >
                     Cancel
                   </button>
                   <button
                     type="submit"
                     disabled={resetLoading}
-                    className="flex-1 text-white font-semibold py-2 px-4 rounded"
-                    style={{ backgroundColor: "#3D348B" }}
+                    className="flex-1 text-white font-semibold py-2 px-4 rounded bg-[#3D348B] hover:bg-[#2E256E] dark:bg-[#7678ED] dark:hover:bg-[#5E4BB8] disabled:opacity-60"
                   >
                     {resetLoading ? "Sending..." : "Send Reset Link"}
                   </button>
