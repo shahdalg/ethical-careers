@@ -25,7 +25,7 @@ export default function CompanyReviewForm() {
   // People
   const [peopleText, setPeopleText] = useState("");
   const [peopleRating, setPeopleRating] = useState("");
-
+  
   // Planet
   const [planetText, setPlanetText] = useState("");
   const [planetRating, setPlanetRating] = useState("");
@@ -45,17 +45,15 @@ export default function CompanyReviewForm() {
   const [error, setError] = useState<string | null>(null);
   const [showSuccessModal, setShowSuccessModal] = useState(false);
   const [isUpdate, setIsUpdate] = useState(false);
-
-  // Fetch proper company name from Firestore
   useEffect(() => {
     const fetchCompanyName = async () => {
       if (!company) return;
-      
+
       try {
         const companySlug = company.toString();
         const companyDocRef = doc(db, "companies", companySlug);
         const companyDoc = await getDoc(companyDocRef);
-        
+
         if (companyDoc.exists()) {
           setCompanyName(formatCompanyName(companyDoc.data().name));
         } else {
@@ -69,7 +67,7 @@ export default function CompanyReviewForm() {
         setCompanyName(formatCompanyName(fallbackName));
       }
     };
-    
+
     fetchCompanyName();
   }, [company]);
 
@@ -251,26 +249,53 @@ export default function CompanyReviewForm() {
     value,
     setValue,
     name,
+    labels,
   }: {
     value: string;
     setValue: (v: string) => void;
     name: string;
-  }) => (
-    <div className="flex gap-3 mt-1">
-      {[1, 2, 3, 4, 5].map((num) => (
-        <label key={num} className="flex items-center gap-1 text-sm">
-          <input
-            type="radio"
-            name={name}
-            value={num.toString()}
-            checked={value === num.toString()}
-            onChange={(e) => setValue(e.target.value)}
-          />
-          {num}
-        </label>
-      ))}
-    </div>
-  );
+    labels?: string[];
+  }) => {
+    // If labels provided, render each radio with its description to the right
+    if (labels && labels.length === 5) {
+      return (
+        <div className="mt-2 space-y-2">
+          {[1, 2, 3, 4, 5].map((num) => (
+            <label key={num} className="flex items-start gap-3 text-sm">
+              <div className="flex items-center gap-2 min-w-[48px]">
+                <input
+                  type="radio"
+                  name={name}
+                  value={num.toString()}
+                  checked={value === num.toString()}
+                  onChange={(e) => setValue(e.target.value)}
+                />
+                <span className="font-medium">{num}</span>
+              </div>
+              <span className="text-xs text-gray-600">{labels[num - 1]}</span>
+            </label>
+          ))}
+        </div>
+      );
+    }
+
+    return (
+      <div className="flex gap-3 mt-1">
+        {[1, 2, 3, 4, 5].map((num) => (
+          <label key={num} className="flex items-center gap-1 text-sm">
+            <input
+              type="radio"
+              name={name}
+              value={num.toString()}
+              checked={value === num.toString()}
+              onChange={(e) => setValue(e.target.value)}
+            />
+            {num}
+          </label>
+        ))}
+      </div>
+    );
+  };
 
   // Yes/No Radios
   const YesNoRadios = ({
@@ -460,16 +485,32 @@ export default function CompanyReviewForm() {
           </section>
 
 
-
 {/* People */}
 <section className="border border-gray-200 rounded-2xl p-5 bg-white shadow-sm">
   <h2 className="font-semibold mb-2 text-[#3D348B]">People</h2>
+    <p className="text-xs text-gray-600 mb-2">
+    Please rate this company’s culture and employee treatment.
+  </p>
 
-  {/* <p className="text-xs text-gray-600 mb-2">
-    Please rate how this company treats its people: pay & benefits, inclusion,
-    respect, safety, work–life balance, and how fairly workers are treated.
-  </p> */}
+  {/* Rating scale WITH the radios + descriptions */}
+  <div className="mb-4">
+    <p className="text-xs text-gray-600 font-medium mb-1">Rating Scale</p>
 
+    <RatingRadios
+      value={peopleRating}
+      setValue={setPeopleRating}
+      name="peopleRating"
+      labels={[
+        'Harmful / exploitative',
+        'Below expectations',
+        'Mixed / acceptable but imperfect',
+        'Positive / generally ethical',
+        'Excellent / values-driven',
+      ]}
+    />
+  </div>
+
+  {/* Question */}
   <label className="block mb-2 text-sm">
     How do you feel about this company’s culture and ethics for its employees?
     <textarea
@@ -477,35 +518,40 @@ export default function CompanyReviewForm() {
       onChange={(e) => setPeopleText(e.target.value)}
       className="w-full border border-gray-300 p-2 rounded mt-1"
       rows={3}
-      // placeholder="Share specific experiences or observations (e.g., pay equity, discrimination, management behavior, support, protections, etc.)."
     />
   </label>
-
-  <p className="text-[10px] text-gray-600 mb-1">
-    1 = Harmful / exploitative ·
-    2 = Below expectations ·
-    3 = Mixed / acceptable but imperfect ·
-    4 = Positive / generally ethical ·
-    5 = Excellent / consistently values-driven
-  </p>
-
-  <RatingRadios
-    value={peopleRating}
-    setValue={setPeopleRating}
-    name="peopleRating"
-  />
 </section>
+
+
+
+
+
 
 
 {/* Planet */}
 <section className="border border-gray-200 rounded-2xl p-5 bg-white shadow-sm">
   <h2 className="font-semibold mb-2 text-[#3D348B]">Planet</h2>
 
-  {/* <p className="text-xs text-gray-600 mb-2">
-    Please rate this company’s environmental responsibility: emissions,
-    resource use, waste reduction, renewable energy adoption, and efforts to
-    reduce its ecological footprint.
-  </p> */}
+  <p className="text-xs text-gray-600 mb-2">
+    Please rate this company’s environmental impact.
+  </p>
+
+  <div className="mb-4">
+    <p className="text-xs text-gray-600 font-medium mb-1">Rating Scale</p>
+
+    <RatingRadios
+      value={planetRating}
+      setValue={setPlanetRating}
+      name="planetRating"
+      labels={[
+        'Actively harmful to the environment',
+        'Below expectations / minimal effort',
+        'Average / mixed practices',
+        'Positive / proactive sustainability',
+        'Leading in environmental stewardship',
+      ]}
+    />
+  </div>
 
   <label className="block mb-2 text-sm">
     How do you feel about this company’s sustainability and environmental
@@ -515,59 +561,46 @@ export default function CompanyReviewForm() {
       onChange={(e) => setPlanetText(e.target.value)}
       className="w-full border border-gray-300 p-2 rounded mt-1"
       rows={3}
-      // placeholder="Share examples (e.g., sustainability reports, waste reduction efforts, greenwashing concerns, or community environmental impact)."
+      //placeholder="Share examples (e.g., sustainability reports, waste reduction efforts, greenwashing concerns, or community environmental impact)."
     />
   </label>
-
-  <p className="text-[10px] text-gray-600 mb-1">
-    1 = Actively harmful to the environment ·
-    2 = Below expectations / minimal effort ·
-    3 = Average / mixed practices ·
-    4 = Positive / proactive sustainability ·
-    5 = Leading in environmental stewardship
-  </p>
-
-  <RatingRadios
-    value={planetRating}
-    setValue={setPlanetRating}
-    name="planetRating"
-  />
 </section>
 
 {/* Transparency */}
 <section className="border border-gray-200 rounded-2xl p-5 bg-white shadow-sm">
   <h2 className="font-semibold mb-2 text-[#3D348B]">Transparency</h2>
 
-  {/* /* <p className="text-xs text-gray-600 mb-2">
+  <p className="text-xs text-gray-600 mb-2">
     Please rate how openly this company communicates its values, operations,
-    and decision-making — including ethical disclosures, supply chain
-    transparency, and accountability to the public.
-  </p> */ }
+    and decision-making.
+  </p>
+  <div className="mb-4">
+    <p className="text-xs text-gray-600 font-medium mb-1">Rating Scale</p>
+
+    <RatingRadios
+      value={transparencyRating}
+      setValue={setTransparencyRating}
+      name="transparencyRating"
+      labels={[
+        'Misleading / opaque',
+        'Minimal disclosure',
+        'Some transparency but limited detail',
+        'Clear / open reporting',
+        'Fully transparent',
+      ]}
+    />
+  </div>
 
   <label className="block mb-2 text-sm">
     How transparent are this company’s external practices and communications?
-   <textarea
+    <textarea
       value={transparencyText}
       onChange={(e) => setTransparencyText(e.target.value)}
       className="w-full border border-gray-300 p-2 rounded mt-1"
       rows={3}
-      // placeholder="Include notes on clarity in reporting, honesty in advertising, or accessibility of company data."
-    /> 
+      //placeholder="Include notes on clarity in reporting, honesty in advertising, or accessibility of company data."
+    />
   </label>
-
-  <p className="text-[10px] text-gray-600 mb-1">
-    1 = Misleading / opaque ·
-    2 = Minimal disclosure ·
-    3 = Some transparency but limited detail ·
-    4 = Clear / open reporting ·
-    5 = Fully transparent 
-  </p>
-
-  <RatingRadios
-    value={transparencyRating}
-    setValue={setTransparencyRating}
-    name="transparencyRating"
-  />
 </section>
 
 
@@ -578,7 +611,7 @@ export default function CompanyReviewForm() {
           <section className="border border-gray-200 rounded-2xl p-5 bg-white shadow-sm">
             <h2 className="font-semibold mb-2 text-[#3D348B]">Overall</h2>
             <label className="block mb-2 text-sm">
-              Share an overall summary of your experience with this company.
+              Share an overall summary of your experience with or findings about this company.
               <textarea
                 value={overallText}
                 onChange={(e) => setOverallText(e.target.value)}
