@@ -24,6 +24,7 @@ export default function PostCompanySurveyModal({
   const [considerWorking, setConsiderWorking] = useState("");
   
   // Overall evaluation questions
+  const [reviewsStoodOut, setReviewsStoodOut] = useState("");
   const [workersCommunities, setWorkersCommunities] = useState("");
   const [environmentalImpact, setEnvironmentalImpact] = useState("");
   const [transparency, setTransparency] = useState("");
@@ -38,9 +39,9 @@ export default function PostCompanySurveyModal({
     e.preventDefault();
     setError(null);
 
-    if (!summary || !overallEthical || !considerWorking || !workersCommunities || 
-        !environmentalImpact || !transparency || !trustStatements || 
-        !ethicalConcerns || !lookedUpEthics) {
+    if (!summary || !overallEthical || !considerWorking || !reviewsStoodOut || 
+        !workersCommunities || !environmentalImpact || !transparency || 
+        !trustStatements || !ethicalConcerns || !lookedUpEthics) {
       setError("Please answer all questions before continuing.");
       return;
     }
@@ -58,6 +59,7 @@ export default function PostCompanySurveyModal({
           summary,
           overallEthical: Number(overallEthical),
           considerWorking,
+          reviewsStoodOut,
           workersCommunities: Number(workersCommunities),
           environmentalImpact: Number(environmentalImpact),
           transparency: Number(transparency),
@@ -206,6 +208,20 @@ export default function PostCompanySurveyModal({
             <h3 className="font-semibold text-lg mb-4" style={{ color: "#3D348B" }}>
               Overall Evaluation
             </h3>
+
+            {/* Reviews Reflection */}
+            <div className="mb-6">
+              <label className="block font-semibold mb-2 text-gray-800">
+                What stood out to you in the reviews you read?
+              </label>
+              <textarea
+                value={reviewsStoodOut}
+                onChange={(e) => setReviewsStoodOut(e.target.value)}
+                className="w-full border border-gray-300 p-3 rounded mt-1"
+                rows={4}
+                placeholder="Share your thoughts about the reviews..."
+              />
+            </div>
 
             {/* Workers & Communities */}
             <div className="mb-6">
