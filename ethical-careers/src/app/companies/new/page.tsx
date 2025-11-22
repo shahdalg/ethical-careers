@@ -5,8 +5,9 @@ import { useRouter } from "next/navigation";
 import { addCompany } from "@/lib/addCompany";
 import { auth, db } from "@/lib/firebase";
 import { doc, setDoc, getDoc, serverTimestamp } from "firebase/firestore";
+import { withAuth } from "@/lib/withAuth";
 
-export default function NewCompanyPage() {
+function NewCompanyPage() {
   const router = useRouter();
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
@@ -120,3 +121,5 @@ export default function NewCompanyPage() {
     </main>
   );
 }
+
+export default withAuth(NewCompanyPage);

@@ -161,23 +161,23 @@ export default function SignupSurvey({ userId, email }: SignupSurveyProps) {
   return (
     <form
       onSubmit={handleSurveySubmit}
-      className="w-full max-w-2xl border bg-white p-6 rounded-lg shadow flex flex-col gap-5"
+      className="w-full max-w-2xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 p-6 rounded-lg shadow-lg flex flex-col gap-5"
     >
-      <h2 className="text-2xl font-semibold text-center mb-1">
+      <h2 className="text-2xl font-semibold text-center mb-1 text-gray-900 dark:text-gray-100">
         Before you start, a few questions 🌱
       </h2>
 
       {pseudonym && (
-        <p className="text-sm text-center text-gray-600 mb-2">
+        <p className="text-sm text-center text-gray-600 dark:text-gray-300 mb-2">
           Your anonymous name on the platform is{" "}
-          <span className="font-semibold text-[#3D348B]">
+          <span className="font-semibold text-[#3D348B] dark:text-[#7678ED]">
             {pseudonym}
           </span>
           .
         </p>
       )}
 
-      <p className="text-xs text-gray-500 text-center mb-4">
+      <p className="text-xs text-gray-500 dark:text-gray-400 text-center mb-4">
         These questions help us understand how people think about ethics and
         careers. Your responses are stored separately from anything public.
       </p>
@@ -215,13 +215,13 @@ export default function SignupSurvey({ userId, email }: SignupSurveyProps) {
       />
 
       {surveyError && (
-        <p className="text-sm text-red-600 text-center">{surveyError}</p>
+        <p className="text-sm text-red-600 dark:text-red-400 text-center">{surveyError}</p>
       )}
 
       <button
         type="submit"
         disabled={surveyLoading}
-        className="bg-[#3D348B] hover:bg-[#2E256E] disabled:opacity-60 text-white font-semibold py-3 px-6 rounded transition-colors"
+        className="bg-[#3D348B] hover:bg-[#2E256E] dark:bg-[#7678ED] dark:hover:bg-[#5E4BB8] disabled:opacity-60 text-white font-semibold py-3 px-6 rounded transition-colors"
       >
         {surveyLoading ? "Submitting..." : "Continue to Platform"}
       </button>
@@ -240,8 +240,8 @@ function ScaleQuestion({
   onChange: (v: string) => void;
 }) {
   return (
-    <div className="border-b pb-4">
-      <p className="text-sm font-medium mb-2">{label}</p>
+    <div className="border-b border-gray-200 dark:border-gray-700 pb-4">
+      <p className="text-sm font-medium mb-2 text-gray-800 dark:text-gray-200">{label}</p>
       <div className="flex gap-2 justify-between">
         {[1, 2, 3, 4, 5].map((num) => (
           <label
@@ -256,11 +256,11 @@ function ScaleQuestion({
               onChange={(e) => onChange(e.target.value)}
               className="cursor-pointer"
             />
-            <span className="text-xs text-gray-600">{num}</span>
+            <span className="text-xs text-gray-600 dark:text-gray-400">{num}</span>
           </label>
         ))}
       </div>
-      <div className="flex justify-between text-xs text-gray-500 mt-1">
+      <div className="flex justify-between text-xs text-gray-500 dark:text-gray-400 mt-1">
         <span>Strongly Disagree</span>
         <span>Strongly Agree</span>
       </div>
@@ -279,8 +279,8 @@ function YesNoQuestion({
   onChange: (v: string) => void;
 }) {
   return (
-    <div className="border-b pb-4">
-      <p className="text-sm font-medium mb-2">{label}</p>
+    <div className="border-b border-gray-200 dark:border-gray-700 pb-4">
+      <p className="text-sm font-medium mb-2 text-gray-800 dark:text-gray-200">{label}</p>
       <div className="flex gap-4">
         {["Yes", "No"].map((option) => (
           <label key={option} className="flex items-center gap-2 cursor-pointer">
@@ -292,7 +292,7 @@ function YesNoQuestion({
               onChange={(e) => onChange(e.target.value)}
               className="cursor-pointer"
             />
-            <span className="text-sm">{option}</span>
+            <span className="text-sm text-gray-800 dark:text-gray-200">{option}</span>
           </label>
         ))}
       </div>

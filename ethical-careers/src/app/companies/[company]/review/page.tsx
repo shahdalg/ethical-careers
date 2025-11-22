@@ -6,8 +6,9 @@ import { db, auth } from "@/lib/firebase"; // adjust path if needed
 import { collection, addDoc, Timestamp, doc, getDoc, query, where, getDocs, updateDoc } from "firebase/firestore";
 import { onAuthStateChanged } from "firebase/auth";
 import { formatCompanyName } from "@/lib/formatCompanyName";
+import { withAuth } from "@/lib/withAuth";
 
-export default function CompanyReviewForm() {
+function CompanyReviewForm() {
   const router = useRouter();
   const { company } = useParams(); // dynamic URL param (e.g. /companies/google/review)
   const [companyName, setCompanyName] = useState<string>("");
@@ -654,3 +655,5 @@ export default function CompanyReviewForm() {
     </main>
   );
 }
+
+export default withAuth(CompanyReviewForm);

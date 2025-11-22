@@ -1,6 +1,7 @@
 /**
  * Format company names with proper capitalization
  * Handles common patterns like "google" -> "Google", "ibm" -> "IBM"
+ * Preserves mixed case like "SpaceX", "LinkedIn", "YouTube"
  */
 export function formatCompanyName(name: string | undefined | null): string {
   if (!name) return "Unknown Company";
@@ -12,6 +13,25 @@ export function formatCompanyName(name: string | undefined | null): string {
     'IKEA', 'HSBC', 'UPS', 'FedEx', 'API', 'USA', 'UK', 'EU', 'UN',
     'MIT', 'UCLA', 'USC', 'NYU', 'KPMG', 'PwC', 'EY', 'GM', 'GE',
     'J&J', 'P&G', 'M&M', 'R&D', 'IT', 'AI', 'ML', 'AR', 'VR'
+  ]);
+
+  // Known mixed-case brand names
+  const mixedCaseBrands = new Map([
+    ['spacex', 'SpaceX'],
+    ['linkedin', 'LinkedIn'],
+    ['youtube', 'YouTube'],
+    ['paypal', 'PayPal'],
+    ['iphone', 'iPhone'],
+    ['ipad', 'iPad'],
+    ['imac', 'iMac'],
+    ['macbook', 'MacBook'],
+    ['deloitte', 'Deloitte'],
+    ['accenture', 'Accenture'],
+    ['salesforce', 'Salesforce'],
+    ['servicenow', 'ServiceNow'],
+    ['linkedin', 'LinkedIn'],
+    ['mckinsey & company', 'McKinsey & Company'],
+    ['mckinsey and company', 'McKinsey & Company'],
   ]);
 
   // Words that should be lowercase (unless first word)
@@ -27,6 +47,20 @@ export function formatCompanyName(name: string | undefined | null): string {
   const upper = cleaned.toUpperCase();
   if (acronyms.has(upper)) {
     return upper;
+  }
+
+  // Check if it's a known mixed-case brand
+  const lower = cleaned.toLowerCase();
+  if (mixedCaseBrands.has(lower)) {
+    return mixedCaseBrands.get(lower)!;
+  }
+
+  // Check if the name has mixed case (e.g., "SpaceX", "LinkedIn")
+  // If it has uppercase letters after the first character, preserve it
+  const hasInternalCaps = /[a-z][A-Z]/.test(cleaned);
+  if (hasInternalCaps) {
+    // Just capitalize the first letter if it isn't already
+    return cleaned.charAt(0).toUpperCase() + cleaned.slice(1);
   }
 
   // Split on spaces, hyphens, and preserve them

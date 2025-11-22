@@ -16,6 +16,7 @@ import {
 } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import { formatCompanyName } from "@/lib/formatCompanyName";
+import { withAuth } from "@/lib/withAuth";
 
 type Post = {
   id: string;
@@ -43,7 +44,7 @@ type Comment = {
   createdAt?: Timestamp;
 };
 
-export default function PublicProfilePage() {
+function PublicProfilePage() {
   const params = useParams();
   const userId = params?.userId as string;
 
@@ -188,3 +189,5 @@ export default function PublicProfilePage() {
     </main>
   );
 }
+
+export default withAuth(PublicProfilePage);

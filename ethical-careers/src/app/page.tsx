@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import GlobalPostSurveyModal from '@/components/GlobalPostSurveyModal';
 import { getUserSurveyData, needsGlobalPostSurvey } from '@/lib/surveyHelpers';
+import { withAuth } from '@/lib/withAuth';
 
 const Home = () => {
   const revealRefs = useRef<Array<HTMLElement | null>>([]);
@@ -138,7 +139,7 @@ const Home = () => {
           {[ {
       name: "McKinsey & Company",
       field: "Consulting",
-      link: "/companies/mckinsey",
+      link: "/companies/mckinsey-%26-company",
       logo: "/images/mckinsey.png", // 🧩 add your logo files under /public/logos/
       color: "#F7B801",
     },
@@ -301,5 +302,5 @@ const Home = () => {
   );
 };
 
-export default Home;
+export default withAuth(Home);
 

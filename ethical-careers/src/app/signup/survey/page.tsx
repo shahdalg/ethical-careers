@@ -128,7 +128,7 @@ function SurveyPageContent() {
   }
 
   return (
-    <main className="flex min-h-screen items-center justify-center p-4 bg-gray-50">
+    <main className="flex min-h-screen items-center justify-center p-4 bg-gray-50 dark:bg-gray-900">
       <SignupSurvey userId={userId} email={email} />
     </main>
   );

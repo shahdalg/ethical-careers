@@ -23,6 +23,7 @@ import {
 } from "firebase/firestore";
 import { auth, db } from "@/lib/firebase";
 import { formatCompanyName } from "@/lib/formatCompanyName";
+import { withAuth } from "@/lib/withAuth";
 
 type Post = {
   id: string;
@@ -56,7 +57,7 @@ type Comment = {
   createdAt?: Timestamp;
 };
 
-export default function ProfilePage() {
+function ProfilePage() {
   const router = useRouter();
   const [user, setUser] = useState<User | null>(auth.currentUser);
   const [loadingAuth, setLoadingAuth] = useState(true);
@@ -484,4 +485,6 @@ export default function ProfilePage() {
     </main>
   );
 }
+
+export default withAuth(ProfilePage);
 

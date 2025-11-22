@@ -10,6 +10,7 @@ import { collection, query, where, getDocs, doc, getDoc, updateDoc, arrayUnion, 
 import { getUserSurveyData, needsPreSurvey } from "@/lib/surveyHelpers";
 import { onAuthStateChanged } from "firebase/auth";
 import { formatCompanyName } from "@/lib/formatCompanyName";
+import { withAuth } from "@/lib/withAuth";
 
 interface Review {
   id: string;
@@ -32,7 +33,7 @@ interface Review {
   likedBy?: string[];
 }
 
-export default function CompanyPage() {
+export default withAuth(CompanyPage);
   const router = useRouter();
   const { company } = useParams();
   const [reviews, setReviews] = useState<Review[]>([]);
@@ -253,7 +254,7 @@ export default function CompanyPage() {
 
       <div className="p-8 max-w-6xl mx-auto">
         <div className="flex justify-between items-center mb-8">
-          <h1 className="text-2xl font-bold">{companyName || "Loading..."}</h1>
+          <h1 className="text-2xl font-bold">{formatCompanyName(companyName) || "Loading..."}</h1>
           <Link
             href={`/companies/${company}/review`}
             className="text-white px-4 py-2 rounded hover:opacity-90 shadow-sm"
@@ -498,3 +499,5 @@ export default function CompanyPage() {
     </main>
   );
 }
+
+export default withAuth(CompanyPage);
