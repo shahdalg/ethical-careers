@@ -63,13 +63,13 @@ export default function GlobalPostSurveyModal({ userId, onComplete, onDismiss }:
     // Validate all companies have responses
     for (const company of visitedCompanies) {
       if (!companyResponses[company]?.summary || !companyResponses[company]?.overallEthical || !companyResponses[company]?.considerWorking) {
-        setError(`Please answer all questions for ${company}.`);
+        setError("Please answer all questions before submitting.");
         return;
       }
     }
     
     if (!reviewsStoodOut || !workersCommunities || !environmentalImpact || !transparency || !trustStatements || !ethicalConcerns || !lookedUpEthics) {
-      setError("Please finish the overall evaluation section.");
+      setError("Please answer all questions before submitting.");
       return;
     }
 
