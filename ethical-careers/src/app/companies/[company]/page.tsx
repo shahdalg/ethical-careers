@@ -453,19 +453,55 @@ function CompanyPage() {
                 <div className="space-y-4">
                   {review.peopleText && (
                     <div>
-                      <h3 className="font-medium text-[#3D348B] mb-1">People</h3>
+                      <div className="flex items-center gap-2 mb-1">
+                        <h3 className="font-medium text-[#3D348B]">People</h3>
+                        <div className="flex items-center gap-1">
+                          {[1, 2, 3, 4, 5].map((star) => (
+                            <span
+                              key={star}
+                              className={`text-sm ${star <= review.peopleRating ? 'text-yellow-500' : 'text-gray-300'}`}
+                            >
+                              ★
+                            </span>
+                          ))}
+                        </div>
+                      </div>
                       <p className="text-sm">{review.peopleText}</p>
                     </div>
                   )}
                   {review.planetText && (
                     <div>
-                      <h3 className="font-medium text-[#3D348B] mb-1">Planet</h3>
+                      <div className="flex items-center gap-2 mb-1">
+                        <h3 className="font-medium text-[#3D348B]">Planet</h3>
+                        <div className="flex items-center gap-1">
+                          {[1, 2, 3, 4, 5].map((star) => (
+                            <span
+                              key={star}
+                              className={`text-sm ${star <= review.planetRating ? 'text-yellow-500' : 'text-gray-300'}`}
+                            >
+                              ★
+                            </span>
+                          ))}
+                        </div>
+                      </div>
                       <p className="text-sm">{review.planetText}</p>
                     </div>
                   )}
                   {review.transparencyText && (
                     <div>
-                      <h3 className="font-medium text-[#3D348B] mb-1">Transparency</h3>
+                      <div className="flex items-center gap-2 mb-1">
+                        <h3 className="font-medium text-[#3D348B]">Transparency</h3>
+                        <div className="flex items-center gap-1">
+                          {[1, 2, 3, 4, 5].map((star) => (
+                            <span
+                              key={star}
+                              className={`text-sm ${star <= review.transparencyRating ? 'text-yellow-500' : 'text-gray-300'}`}
+                            >
+                              ★
+                            </span>
+                          ))}
+                        </div>
+                      </div>
                       <p className="text-sm">{review.transparencyText}</p>
                     </div>
                   )}
