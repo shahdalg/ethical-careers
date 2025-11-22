@@ -33,7 +33,7 @@ interface Review {
   likedBy?: string[];
 }
 
-export default withAuth(CompanyPage);
+function CompanyPage() {
   const router = useRouter();
   const { company } = useParams();
   const [reviews, setReviews] = useState<Review[]>([]);
