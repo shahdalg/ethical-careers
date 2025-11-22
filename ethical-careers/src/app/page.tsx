@@ -129,14 +129,14 @@ const Home = () => {
           src="/images/Blob.png"
           alt="Blob graphic"
           aria-hidden="true"
-          className="pointer-events-none select-none absolute -bottom-50 right-1 w-[20vw] min-w-[160px] max-w-[224px] opacity-70"
+          className="pointer-events-none select-none absolute -bottom-50 right-1 w-[15vw] min-w-[80px] max-w-[224px] opacity-70"
         />
 
         <img
           src="/images/Plant.png"
           alt="Blob graphic"
           aria-hidden="true"
-          className="ointer-events-none select-none absolute -bottom-50 left-1 w-[20vw] min-w-[160px] max-w-[224px] opacity-70"
+          className="ointer-events-none select-none absolute -bottom-50 left-1 w-[15vw] min-w-[80px] max-w-[224px] opacity-70"
         />
 
         <h3 className="text-4xl font-extrabold text-center text-[#3D348B] mb-16 tracking-wide">

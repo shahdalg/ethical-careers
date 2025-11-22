@@ -270,14 +270,14 @@ function CompanyPage() {
           src="/images/Squiggle2.png"
           alt="Blob graphic"
           aria-hidden="true"
-          className="pointer-events-none select-none absolute top-50 left-1 w-[20vw] min-w-[160px] max-w-[224px] opacity-70"
+          className="pointer-events-none select-none absolute top-50 left-2 sm:left-1 w-[15vw] min-w-[80px] max-w-[224px] opacity-70"
         />
 
           <img
           src="/images/Squiggle2.png"
           alt="Blob graphic"
           aria-hidden="true"
-          className="pointer-events-none select-none absolute top-50 right-1 w-[20vw] min-w-[160px] max-w-[224px] opacity-70"
+          className="pointer-events-none select-none absolute top-50 right-2 sm:right-1 w-[15vw] min-w-[80px] max-w-[224px] opacity-70"
         />
 
 
