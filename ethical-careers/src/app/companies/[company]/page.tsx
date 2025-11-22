@@ -266,7 +266,23 @@ function CompanyPage() {
 
         {/* Overview */}
         <section className="border border-gray-200 rounded-2xl p-6 bg-white shadow-sm mb-8">
-          
+                  <img
+          src="/images/Squiggle2.png"
+          alt="Blob graphic"
+          aria-hidden="true"
+          className="pointer-events-none select-none absolute top-50 left-1 w-[20vw] min-w-[160px] max-w-[224px] opacity-70"
+        />
+
+          <img
+          src="/images/Squiggle2.png"
+          alt="Blob graphic"
+          aria-hidden="true"
+          className="pointer-events-none select-none absolute top-50 right-1 w-[20vw] min-w-[160px] max-w-[224px] opacity-70"
+        />
+
+
+
+
           {/* Overall Rating - Large and Prominent */}
           <div className="mb-8 pb-6 border-b border-gray-200 text-center">
             <h3 className="text-2xl font-bold mb-3 text-[#3D348B]">Overall Rating</h3>
@@ -317,6 +333,12 @@ function CompanyPage() {
           <h2 className="text-xl font-semibold mb-4 text-[#3D348B]">
             Reviews ({reviews.length})
           </h2>
+          <img
+          src="/images/Squiggle4.png"
+          alt="Blob graphic"
+          aria-hidden="true"
+          className="pointer-events-none select-none absolute -bottom-50 right-1 w-[20vw] min-w-[160px] max-w-[224px] opacity-70 rotate-45"
+        />
 
           {/* Guidance panel: visible regardless of review count */}
           <div className="mb-6">
