@@ -21,6 +21,7 @@ export default function GlobalPostSurveyModal({ userId, onComplete, onDismiss }:
   const [companyResponses, setCompanyResponses] = useState<Record<string, CompanyResponse>>({});
 
   // Overall evaluation section (same as previous post survey overall part)
+  const [reviewsStoodOut, setReviewsStoodOut] = useState("");
   const [workersCommunities, setWorkersCommunities] = useState("");
   const [environmentalImpact, setEnvironmentalImpact] = useState("");
   const [transparency, setTransparency] = useState("");
@@ -67,7 +68,7 @@ export default function GlobalPostSurveyModal({ userId, onComplete, onDismiss }:
       }
     }
     
-    if (!workersCommunities || !environmentalImpact || !transparency || !trustStatements || !ethicalConcerns || !lookedUpEthics) {
+    if (!reviewsStoodOut || !workersCommunities || !environmentalImpact || !transparency || !trustStatements || !ethicalConcerns || !lookedUpEthics) {
       setError("Please finish the overall evaluation section.");
       return;
     }
@@ -81,6 +82,7 @@ export default function GlobalPostSurveyModal({ userId, onComplete, onDismiss }:
       await setDoc(doc(db, "globalPostSurveys", `${userId}_${Date.now()}`), {
         userId,
         companyResponses,
+        reviewsStoodOut,
         workersCommunities: Number(workersCommunities),
         environmentalImpact: Number(environmentalImpact),
         transparency: Number(transparency),
@@ -224,6 +226,18 @@ export default function GlobalPostSurveyModal({ userId, onComplete, onDismiss }:
 
           <div className="border-t pt-6">
             <h3 className="font-semibold text-lg mb-4" style={{ color: "#3D348B" }}>Overall Evaluation</h3>
+
+            {/* Reviews Reflection */}
+            <div className="mb-6">
+              <label className="block font-semibold mb-2">What stood out to you in the reviews you read?</label>
+              <textarea
+                value={reviewsStoodOut}
+                onChange={(e) => setReviewsStoodOut(e.target.value)}
+                className="w-full border p-3 rounded"
+                rows={4}
+                placeholder="Share your thoughts about the reviews..."
+              />
+            </div>
 
             {/* Workers & Communities */}
             <div className="mb-6">

@@ -78,11 +78,11 @@ export function needsGlobalPostSurvey(
   console.log('Global post-survey check:', {
     signupTime: signupTime.toISOString(),
     daysSince,
-    threshold: 0.001,
-    shouldShow: daysSince >= 0.001
+    threshold: 7,
+    shouldShow: daysSince >= 7
   });
   
-  return daysSince >= 0.001;
+  return daysSince >= 7;
 }
 
  
