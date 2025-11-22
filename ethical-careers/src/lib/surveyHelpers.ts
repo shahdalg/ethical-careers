@@ -82,7 +82,7 @@ export function needsGlobalPostSurvey(
     shouldShow: daysSince >= 0.001
   });
   
-  return daysSince >= 0.001; // ~1.44 minutes for rapid testing (adjust to 7 for prod)
+  return daysSince >= 0.001;
 }
 
  

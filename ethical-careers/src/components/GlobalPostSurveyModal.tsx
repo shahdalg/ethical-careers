@@ -2,6 +2,7 @@
 import { useState, useEffect } from "react";
 import { doc, getDoc, setDoc, serverTimestamp } from "firebase/firestore";
 import { db } from "@/lib/firebase";
+import { formatCompanyName } from "@/lib/formatCompanyName";
 
 interface GlobalPostSurveyModalProps {
   userId: string;
@@ -129,28 +130,8 @@ export default function GlobalPostSurveyModal({ userId, onComplete, onDismiss }:
               {visitedCompanies.map((company) => (
                 <div key={company} className="mb-8 p-4 border rounded-lg bg-gray-50">
                   <h4 className="font-semibold text-md mb-4" style={{ color: "#3D348B" }}>
-                    {company}
+                    {formatCompanyName(company)}
                   </h4>
-
-                  {/* Summary textbox */}
-                  <div className="mb-6">
-                    <label className="block font-semibold mb-2 text-gray-800">
-                      Summarize what you've read on this company's page
-                    </label>
-                    <textarea
-                      value={companyResponses[company]?.summary || ""}
-                      onChange={(e) => setCompanyResponses({
-                        ...companyResponses,
-                        [company]: {
-                          ...companyResponses[company],
-                          summary: e.target.value
-                        }
-                      })}
-                      rows={3}
-                      className="w-full border p-3 rounded"
-                      placeholder="Describe what you learned about this company..."
-                    />
-                  </div>
 
                   {/* Question 1: Overall Ethical Rating */}
                   <div className="mb-6">
@@ -184,7 +165,7 @@ export default function GlobalPostSurveyModal({ userId, onComplete, onDismiss }:
                   </div>
 
                   {/* Question 2: Consider Working */}
-                  <div className="mb-4">
+                  <div className="mb-6">
                     <label className="block font-semibold mb-2 text-gray-800">
                       Would you consider working here?
                     </label>
@@ -215,6 +196,26 @@ export default function GlobalPostSurveyModal({ userId, onComplete, onDismiss }:
                         </label>
                       ))}
                     </div>
+                  </div>
+
+                  {/* Follow-up: Why */}
+                  <div className="mb-4">
+                    <label className="block font-semibold mb-2 text-gray-800">
+                      What factors influenced your decision?
+                    </label>
+                    <textarea
+                      value={companyResponses[company]?.summary || ""}
+                      onChange={(e) => setCompanyResponses({
+                        ...companyResponses,
+                        [company]: {
+                          ...companyResponses[company],
+                          summary: e.target.value
+                        }
+                      })}
+                      rows={3}
+                      className="w-full border p-3 rounded"
+                      placeholder="Explain your reasoning..."
+                    />
                   </div>
                 </div>
               ))}

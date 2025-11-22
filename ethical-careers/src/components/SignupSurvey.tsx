@@ -281,8 +281,8 @@ function YesNoQuestion({
   return (
     <div className="border-b border-gray-200 dark:border-gray-700 pb-4">
       <p className="text-sm font-medium mb-2 text-gray-800 dark:text-gray-200">{label}</p>
-      <div className="flex gap-4">
-        {["Yes", "No"].map((option) => (
+      <div className="flex flex-col gap-2">
+        {["Yes", "No", "Not applicable (I have not looked for jobs in the last 12 months)"].map((option) => (
           <label key={option} className="flex items-center gap-2 cursor-pointer">
             <input
               type="radio"
