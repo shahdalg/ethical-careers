@@ -177,23 +177,23 @@ await sendEmailVerification(user, {
 
   // ---------- UI ----------
   return (
-    <main className="flex min-h-screen items-center justify-center p-4 bg-gray-50">
+    <main className="flex min-h-screen items-center justify-center p-4 bg-gray-50 dark:bg-gray-900">
       <form
         onSubmit={handleSignup}
-        className="w-full max-w-md border bg-white p-6 rounded-lg shadow flex flex-col gap-4"
+        className="w-full max-w-md border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 p-6 rounded-lg shadow-lg flex flex-col gap-4"
       >
-        <h2 className="text-2xl font-semibold text-center">
+        <h2 className="text-2xl font-semibold text-center text-gray-900 dark:text-gray-100">
           Create your account
         </h2>
-        <p className="text-xs text-gray-500 text-center">
-          You’ll be assigned an anonymous username used for posts & reviews.
+        <p className="text-xs text-gray-500 dark:text-gray-400 text-center">
+          You'll be assigned an anonymous username used for posts & reviews.
         </p>
 
-        <label className="flex flex-col gap-1">
+        <label className="flex flex-col gap-1 text-gray-800 dark:text-gray-200 font-medium">
           <span>Email</span>
           <input
             type="email"
-            className="border p-2 rounded"
+            className="border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 p-2 rounded focus:ring-2 focus:ring-[#3D348B] dark:focus:ring-[#7678ED] outline-none disabled:opacity-60"
             required
             value={email}
             onChange={(e) => setEmail(e.target.value)}
@@ -201,11 +201,11 @@ await sendEmailVerification(user, {
           />
         </label>
 
-        <label className="flex flex-col gap-1">
+        <label className="flex flex-col gap-1 text-gray-800 dark:text-gray-200 font-medium">
           <span>Password</span>
           <input
             type="password"
-            className="border p-2 rounded"
+            className="border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 p-2 rounded focus:ring-2 focus:ring-[#3D348B] dark:focus:ring-[#7678ED] outline-none disabled:opacity-60"
             required
             value={password}
             onChange={(e) => setPassword(e.target.value)}
@@ -226,14 +226,14 @@ await sendEmailVerification(user, {
         </label>
         */}
 
-        {error && <p className="text-sm text-red-600">{error}</p>}
+        {error && <p className="text-sm text-red-600 dark:text-red-400">{error}</p>}
 
         {/* Initial create button (before verification email is sent) */}
         {!verificationSent && (
           <button
             type="submit"
             disabled={loading}
-            className="bg-[#3D348B] hover:bg-[#2E256E] disabled:opacity-60 text-white font-semibold py-2 px-4 rounded transition-colors"
+            className="bg-[#3D348B] hover:bg-[#2E256E] dark:bg-[#7678ED] dark:hover:bg-[#5E4BB8] disabled:opacity-60 text-white font-semibold py-2 px-4 rounded transition-colors"
           >
             {loading ? "Creating account..." : "Create Account"}
           </button>
@@ -241,21 +241,21 @@ await sendEmailVerification(user, {
 
         {/* After email is sent */}
         {verificationSent && (
-          <div className="mt-3 p-3 border rounded-md bg-gray-50 text-xs flex flex-col gap-2">
+          <div className="mt-3 p-3 border border-gray-300 dark:border-gray-600 rounded-md bg-gray-50 dark:bg-gray-700 text-xs text-gray-800 dark:text-gray-200 flex flex-col gap-2">
             <p>
-              We’ve sent a verification link to{" "}
+              We've sent a verification link to{" "}
               <span className="font-semibold">{email}</span>. Click the link in
               your email to verify your account. Please check your spam folder.
             </p>
             <ul className="list-disc list-inside space-y-1">
               <li>
                 Return here after verifying and click {" "}
-                <strong>“I’ve verified”</strong> to continue.
+                <strong>"I've verified"</strong> to continue.
               </li>
             </ul>
 
             {verificationError && (
-              <p className="text-red-600">{verificationError}</p>
+              <p className="text-red-600 dark:text-red-400">{verificationError}</p>
             )}
 
             <div className="flex gap-2 items-center mt-1">
@@ -263,14 +263,14 @@ await sendEmailVerification(user, {
                 type="button"
                 onClick={handleCheckVerified}
                 disabled={verificationChecking}
-                className="bg-[#3D348B] text-white px-3 py-1 rounded text-xs disabled:opacity-60"
+                className="bg-[#3D348B] hover:bg-[#2E256E] dark:bg-[#7678ED] dark:hover:bg-[#5E4BB8] text-white px-3 py-1 rounded text-xs disabled:opacity-60"
               >
-                {verificationChecking ? "Checking..." : "I’ve verified"}
+                {verificationChecking ? "Checking..." : "I've verified"}
               </button>
               <button
                 type="button"
                 onClick={handleResendVerification}
-                className="text-[#3D348B] text-xs underline"
+                className="text-[#3D348B] dark:text-[#7678ED] text-xs underline hover:no-underline"
               >
                 Resend email
               </button>
@@ -278,9 +278,9 @@ await sendEmailVerification(user, {
           </div>
         )}
 
-        <p className="text-sm text-center mt-2">
+        <p className="text-sm text-center mt-2 text-gray-800 dark:text-gray-200">
           Already have an account?{" "}
-          <a href="/login" className="text-blue-600 hover:underline">
+          <a href="/login" className="text-[#3D348B] dark:text-[#7678ED] hover:underline font-semibold">
             Click here
           </a>
         </p>
